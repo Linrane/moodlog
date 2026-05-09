@@ -1,0 +1,96 @@
+{
+  "_comment": "MoodLog English translation file.",
+  "app": {
+    "name": "MoodLog",
+    "description": "Terminal Mood Diary · Simple logging, rich review"
+  },
+  "record": {
+    "prompt": {
+      "choose_mood": "Please choose your mood today",
+      "score": "Enter score (1-5)",
+      "note": "Write something (press Enter to skip)",
+      "confirm_overwrite": "Overwrite existing record?"
+    },
+    "labels": {
+      "1": "Very Low",
+      "2": "Low",
+      "3": "Neutral",
+      "4": "Good",
+      "5": "Great"
+    },
+    "messages": {
+      "success_new": "Recorded! {date}: {display}",
+      "success_update": "Updated! {date}: {display}",
+      "cancelled": "Cancelled.",
+      "date_format_error": "Date format error: {date}. Use YYYY-MM-DD."
+    }
+  },
+  "view": {
+    "today_none": "No record for today ✨",
+    "today_prompt": "Write down your mood now:",
+    "quick_cmd": "moodlog record {score}",
+    "no_records": "No records in this period.",
+    "records_from": "Records since {date}"
+  },
+  "stats": {
+    "none": "No records yet. Use [bold]moodlog record[/bold] to write one!",
+    "overview_title": "📊 Overall Statistics",
+    "total_records": "Total records",
+    "avg_mood": "Average mood",
+    "best_day": "Best day",
+    "worst_day": "Toughest day",
+    "streak_title": "Streak",
+    "streak_start": "🌱 Start your first record today!",
+    "streak_low": "🔥 Streak: {days} days — Keep going!",
+    "streak_mid": "🔥🔥 Streak: {days} days — Doing great!",
+    "streak_high": "🔥🔥🔥 Streak: {days} days — Very focused!",
+    "streak_legend": "🏆 Legendary streak: {days} days!!",
+    "summary_title": "💬 Mood Summary",
+    "summary_high": "Overall mood: Upbeat 🌟",
+    "summary_mid": "Overall mood: Steady 🌿",
+    "summary_low": "Overall mood: A bit low 🌧️",
+    "summary_very_low": "Overall mood: Needs care 💙",
+    "mood_quote_high": "You shine — don't forget it. ✨",
+    "mood_quote_mid": "Ordinary days have their own beauty.",
+    "mood_quote_low": "Allow yourself to feel low. Tomorrow will be better.",
+    "mood_quote_very_low": "The longest night still ends at dawn. 🌱"
+  },
+  "trend": {
+    "title": "📈 Mood Trend (Last {days} Days)",
+    "none": "No records in {label}."
+  },
+  "export": {
+    "none": "No data to export.",
+    "success": "Exported to: {path}",
+    "printed": "(printed to terminal)"
+  },
+  "remind": {
+    "enabled": "Daily reminder enabled.",
+    "disabled": "Daily reminder disabled.",
+    "not_found": "No reminder found.",
+    "status_on": "Daily reminder: ON",
+    "status_off": "Daily reminder: OFF",
+    "prompt_time": "Enter reminder time (HH:MM)"
+  },
+  "report": {
+    "generating": "Generating report...",
+    "success": "Report generated: {path}",
+    "error": "Failed to generate report: {msg}",
+    "title": "MoodLog · {month}/{year} Mood Report"
+  },
+  "errors": {
+    "score_range": "Score must be between 1 and 5.",
+    "month_range": "Month must be between 1 and 12."
+  },
+  "help": {
+    "quick_start": "Quick Start",
+    "record": "Record today's mood (quick)",
+    "today": "View today's record",
+    "trend": "View 7-day trend",
+    "stats": "Statistics panel"
+  },
+  "calendar": {
+    "month_title": "{month}/{year}",
+    "completion": "Recorded {recorded} / {total} days ({pct}%) this month"
+  }
+}

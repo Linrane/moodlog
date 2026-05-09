@@ -1,0 +1,24 @@
+# MoodLog 默认配置
+# 此文件在首次运行时自动生成，可手动修改
+
+# 界面语言：zh_CN（简体中文）或 en_US（English）
+language = "zh_CN"
+
+[database]
+# 数据库文件路径（支持绝对路径或相对于本文件的相对路径）
+path = "../../data/moodlog.db"
+
+[ui]
+# 情绪 emoji 映射 (1-5)
+mood_emoji = ["😫", "😔", "😐", "😊", "🤩"]
+# 情绪文字映射 (1-5)
+mood_labels = ["很差", "较差", "一般", "不错", "很棒"]
+# 趋势图默认天数
+default_trend_days = 7
+
+[reminder]
+# 是否启用每日提醒
+enabled = false
+# 提醒时间 (HH:MM 24h)
+time = "21:00"
+

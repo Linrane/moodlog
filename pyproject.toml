@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "moodlog"
+version = "0.1.0"
+description = "A minimalist terminal mood diary — record, review, and understand your emotions."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Linrane" }]
+keywords = ["mood", "diary", "cli", "mental-health", "terminal"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+]
+
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+    "plotext>=5.2",
+    "python-dateutil>=2.8",
+    "tomllib; python_version < '3.11'",  # 3.11+ 标准库内置
+    "plyer>=2.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+
+[project.scripts]
+moodlog = "moodlog.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["moodlog*"]
+
+[tool.pytest.ini_options]
+testpaths = ["moodlog/tests"]
+addopts = "-v --tb=short"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning:matplotlib"]

@@ -1,0 +1,96 @@
+{
+  "_comment": "MoodLog 中文翻译文件（基准语言）。修改字符串请同步更新 en_US.json。",
+  "app": {
+    "name": "MoodLog",
+    "description": "终端心情日记 · 极简记录，丰富回顾"
+  },
+  "record": {
+    "prompt": {
+      "choose_mood": "请选择今天的心情",
+      "score": "输入评分 (1-5)",
+      "note": "写点什么（可直接回车跳过）",
+      "confirm_overwrite": "确定要更新吗？"
+    },
+    "labels": {
+      "1": "很低",
+      "2": "偏低",
+      "3": "一般",
+      "4": "不错",
+      "5": "很棒"
+    },
+    "messages": {
+      "success_new": "已记录！{date} 的心情：{display}",
+      "success_update": "已更新！{date} 的心情：{display}",
+      "cancelled": "已取消。",
+      "date_format_error": "日期格式错误：{date}，请使用 YYYY-MM-DD 格式。"
+    }
+  },
+  "view": {
+    "today_none": "今天还没有记录 ✨",
+    "today_prompt": "现在就写下今天的心情：",
+    "quick_cmd": "moodlog record {score}",
+    "no_records": "这段时间没有记录。",
+    "records_from": "{date} 以来的记录"
+  },
+  "stats": {
+    "none": "还没有任何记录，先用 [bold]moodlog record[/bold] 写一篇吧！",
+    "overview_title": "📊 总体统计",
+    "total_records": "总记录数",
+    "avg_mood": "平均情绪",
+    "best_day": "最好的一天",
+    "worst_day": "最难熬的一天",
+    "streak_title": "连续打卡",
+    "streak_start": "🌱 开始你的第一天记录吧！",
+    "streak_low": "🔥 已连续记录 {days} 天  加油！",
+    "streak_mid": "🔥🔥 连续记录 {days} 天  状态不错！",
+    "streak_high": "🔥🔥🔥 连续记录 {days} 天  相当专注！",
+    "streak_legend": "🏆 史诗级连续记录 {days} 天！！传说级！",
+    "summary_title": "💬 情绪小结",
+    "summary_high": "总体情绪：积极向上 🌟",
+    "summary_mid": "总体情绪：平稳安逸 🌿",
+    "summary_low": "总体情绪：略显低落 🌧️",
+    "summary_very_low": "总体情绪：需要关爱 💙",
+    "mood_quote_high": "你闪闪发光的样子，值得被记住。✨",
+    "mood_quote_mid": "平平淡淡才是真。",
+    "mood_quote_low": "允许自己偶尔低落，明天会更好。",
+    "mood_quote_very_low": "黑夜再长，黎明终将到来。🌱"
+  },
+  "trend": {
+    "title": "📈 情绪趋势（近 {days} 天）",
+    "none": "{label} 内没有记录。"
+  },
+  "export": {
+    "none": "没有可导出的数据。",
+    "success": "已导出到：{path}",
+    "printed": "（已打印到终端）"
+  },
+  "remind": {
+    "enabled": "每日提醒已启用。",
+    "disabled": "每日提醒已关闭。",
+    "not_found": "未找到已设置的提醒。",
+    "status_on": "每日提醒：已启用",
+    "status_off": "每日提醒：未启用",
+    "prompt_time": "请输入提醒时间（HH:MM）"
+  },
+  "report": {
+    "generating": "正在生成报告...",
+    "success": "报告已生成：{path}",
+    "error": "生成报告失败：{msg}",
+    "title": "MoodLog · {year}年{month}月情绪报告"
+  },
+  "errors": {
+    "score_range": "评分必须在 1-5 之间。",
+    "month_range": "月份必须在 1-12 之间。"
+  },
+  "help": {
+    "quick_start": "快速开始",
+    "record": "记录今日心情（快速）",
+    "today": "查看今天的记录",
+    "trend": "查看近7天趋势",
+    "stats": "统计面板"
+  },
+  "calendar": {
+    "month_title": "{year}年{month}月",
+    "completion": "本月已记录 {recorded} / {total} 天（完成度 {pct}%）"
+  }
+}

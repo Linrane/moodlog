@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 数据文件（个人数据，不提交）
+data/
+*.db
+
+# 配置（含个人信息）
+.env
+moodlog/config.toml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 测试与覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+
+# AI 工作记忆（不提交）
+.workbuddy/
+
+# OS
+.DS_Store
+Thumbs.db

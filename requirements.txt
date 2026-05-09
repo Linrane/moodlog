@@ -1,0 +1,5 @@
+click>=8.1
+rich>=13.0
+plotext>=5.2
+python-dateutil>=2.8
+plyer>=2.1
