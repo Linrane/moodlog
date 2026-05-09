@@ -18,7 +18,7 @@ MoodLog 是一个运行在命令行里的心情记录工具。
 
 ```bash
 # 克隆仓库
-git clone https://github.com/linrane/moodlog.git
+git clone https://github.com/Linrane/moodlog.git
 cd moodlog
 
 # 创建虚拟环境（推荐）
