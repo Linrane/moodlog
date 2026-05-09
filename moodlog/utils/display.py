@@ -123,13 +123,27 @@ def entry_table(entries: list[MoodEntry], title: str = "心情日记") -> Table:
     table.add_column("日记摘要", min_width=28)
 
     for e in entries:
-        tags_str = "  ".join(f"[magenta]#{t}[/magenta]" for t in e.tags) if e.tags else "[dim]—[/dim]"
-        note_preview = (e.note[:55] + "…") if len(e.note) > 55 else (e.note or "[dim]（无内容）[/dim]")
+        tags_text = Text()
+        if e.tags:
+            for i, t in enumerate(e.tags):
+                if i > 0:
+                    tags_text.append("  ")
+                tags_text.append(f"#{t}", style="magenta")
+        else:
+            tags_text.append("—", style="dim")
+        note_preview = Text()
+        if e.note:
+            if len(e.note) > 55:
+                note_preview.append(e.note[:55] + "…")
+            else:
+                note_preview.append(e.note)
+        else:
+            note_preview.append("（无内容）", style="dim")
         table.add_row(
             str(e.date),
             score_text(e.mood_score),
             mood_bar(e.mood_score, width=18),
-            tags_str,
+            tags_text,
             note_preview,
         )
     return table
@@ -155,7 +169,8 @@ def entry_detail(entry: MoodEntry, show_quote: bool = True) -> Panel:
     if entry.tags:
         left.append("\n  标签\n", style="bold dim")
         for tag in entry.tags:
-            left.append(f"  [magenta]#{tag}[/magenta]\n")
+            left.append(f"  #{tag}", style="magenta")
+            left.append("\n")
 
     right = Text()
     if entry.note:
