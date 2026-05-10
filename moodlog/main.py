@@ -7,6 +7,7 @@ from __future__ import annotations
 import click
 from rich.console import Console
 
+from . import __version__
 from .utils.art import splash_screen
 from .commands import (
     record_cmd, today_cmd, view_cmd,
@@ -27,20 +28,19 @@ BANNER = """[bold cyan]
 
 
 @click.group(invoke_without_command=True)
-@click.version_option(version="0.1.0", prog_name="MoodLog")
+@click.version_option(version=__version__, prog_name="MoodLog")
 @click.pass_context
 def cli(ctx):
     """
-    MoodLog — 你的终端心情日记 📔
+    v{version} · 终端心情日记 · 记录情绪，看见变化 📔
 
-    \b
     快速开始：
       moodlog record 4          记录今天心情（快速）
       moodlog record            交互式记录
       moodlog today             查看今天的记录
       moodlog trend             查看近7天趋势
       moodlog stats             统计面板
-    """
+    """.format(version=__version__)
     if ctx.invoked_subcommand is None:
         splash_screen(console)
         click.echo(ctx.get_help())
