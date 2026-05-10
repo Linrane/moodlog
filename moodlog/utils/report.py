@@ -16,7 +16,7 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.font_manager import FontManager
+from matplotlib.font_manager import FontManager, FontProperties
 
 from ..config import config
 from ..database import get_moods_by_range, init_db
@@ -30,12 +30,12 @@ _FONT_CACHE = None
 
 def _get_chinese_font() -> str | None:
     """自动检测系统中可用的中文字体路径，缓存结果。"""
+    import sys, os
     global _FONT_CACHE
     if _FONT_CACHE is not None:
         return _FONT_CACHE
 
     fm = FontManager()
-    # 按优先级搜索常见中文字体
     preferred = [
         "SimHei", "Microsoft YaHei", "WenQuanYi Micro Hei",
         "Noto Sans CJK SC", "Source Han Sans SC",
@@ -44,11 +44,24 @@ def _get_chinese_font() -> str | None:
     available = {f.name for f in fm.ttflist}
     for name in preferred:
         if name in available:
-            # 找到字体文件路径
             for f in fm.ttflist:
                 if f.name == name:
                     _FONT_CACHE = f.fname
                     return _FONT_CACHE
+
+    # Windows：直接检查常见字体文件路径
+    if sys.platform == "win32":
+        win_paths = [
+            r"C:\Windows\Fonts\simhei.ttf",
+            r"C:\Windows\Fonts\msyh.ttc",
+            r"C:\Windows\Fonts\simsun.ttc",
+            r"C:\Windows\Fonts\msyhbd.ttc",
+            r"C:\Windows\Fonts\STHeiti.ttf",
+        ]
+        for p in win_paths:
+            if os.path.exists(p):
+                _FONT_CACHE = p
+                return _FONT_CACHE
 
     # 回退：找包含 CJK 或 Chinese 的字体
     for f in fm.ttflist:
@@ -60,17 +73,19 @@ def _get_chinese_font() -> str | None:
     return None
 
 
-def _configure_font(ax: plt.Axes | None = None) -> None:
-    """配置中文字体，使得标题/标签正确显示。"""
+def _configure_font(ax: plt.Axes | None = None) -> str | None:
+    """配置中文字体，返回可用的字体路径（用于后续显式传 fontproperties）。"""
     font_path = _get_chinese_font()
     if font_path:
         import matplotlib.font_manager as fm
         fm.fontManager.addfont(font_path)
         prop = fm.FontProperties(fname=font_path)
         matplotlib.rcParams["font.family"] = prop.get_name()
-    else:
-        # 最终回退：禁用 Unicode 负号，用英文标签
         matplotlib.rcParams["axes.unicode_minus"] = False
+        return font_path
+    else:
+        matplotlib.rcParams["axes.unicode_minus"] = False
+        return None
 
 
 # ── 颜色映射 ─────────────────────────────────────────────────────
@@ -116,20 +131,23 @@ def generate_monthly_report(
     scores = [entry_map[d].mood_score if d in entry_map else None for d in all_dates]
 
     # ── 绘图 ──────────────────────────────────────────────────────
-    _configure_font()
+    font_path = _configure_font()
     fig, axes = plt.subplots(2, 1, figsize=(10, 8), constrained_layout=True)
     fig.patch.set_facecolor("#1a1a2e")
 
     # 子图 1：日历热力图
     _draw_calendar_heatmap(ax=axes[0], year=y, month=m, entry_map=entry_map,
-                           all_dates=all_dates, scores=scores)
+                           all_dates=all_dates, scores=scores, font_path=font_path)
 
     # 子图 2：趋势折线图
-    _draw_trend_line(ax=axes[1], all_dates=all_dates, scores=scores, year=y, month=m)
+    _draw_trend_line(ax=axes[1], all_dates=all_dates, scores=scores, year=y, month=m,
+                     font_path=font_path)
 
     # 总体标题
+    fp_main = FontProperties(fname=font_path) if font_path else None
     fig.suptitle(f"MoodLog · {y}年{m}月情绪报告",
-                 fontsize=16, fontweight="bold", color="white")
+                 fontsize=16, fontweight="bold", color="white",
+                 fontproperties=fp_main)
 
     # 保存
     if output_path is None:
@@ -143,65 +161,78 @@ def generate_monthly_report(
     return output_path
 
 
-def _draw_calendar_heatmap(ax, year, month, entry_map, all_dates, scores):
+def _draw_calendar_heatmap(ax, year, month, entry_map, all_dates, scores,
+                            font_path=None):
     """绘制月历热力图。"""
     import calendar as cal_mod
+    from matplotlib.font_manager import FontProperties
 
     ax.set_facecolor("#16213e")
     ax.set_xlim(-0.5, 6.5)
-    ax.set_ylim(5.5, -0.5)  # 颠倒 y 轴，让周从顶部开始
+    ax.set_ylim(6.5, -0.5)
 
     weeks = cal_mod.monthcalendar(year, month)
-    # 构建 (week_index, weekday_index) -> date 的映射
+
     date_to_pos = {}
-    for d in all_dates:
-        w = (d.day + cal_mod.weekday(year, month, d.day)) // 7
-        wd = (cal_mod.weekday(year, month, d.day) + 1) % 7  # 转成周一=0
-        date_to_pos[d] = (w, wd)
+    for week_idx, week in enumerate(weeks):
+        for day_idx, day in enumerate(week):
+            if day != 0:
+                d = date(year, month, day)
+                date_to_pos[d] = (week_idx, day_idx)
+
+    fp = FontProperties(fname=font_path) if font_path else None
 
     for d, (w, wd) in date_to_pos.items():
         entry = entry_map.get(d)
         if entry:
             color = SCORE_COLOR_HEX.get(entry.mood_score, "#555555")
             rect = mpatches.FancyBboxPatch(
-                (wd - 0.4, w - 0.4), 0.8, 0.8,
+                (wd - 0.4, w + 0.1), 0.8, 0.8,
                 boxstyle="round,pad=0.05",
                 facecolor=color, edgecolor="white", linewidth=0.5, alpha=0.85
             )
             ax.add_patch(rect)
-            ax.text(wd, w, str(d.day), ha="center", va="center",
-                    fontsize=12, color="white", fontweight="bold")
-            emoji = config.mood_emoji[entry.mood_score - 1]
-            ax.text(wd, w + 0.22, emoji, ha="center", va="center", fontsize=9)
+            ax.text(wd, w + 0.5, str(d.day), ha="center", va="center",
+                    fontsize=12, color="white", fontweight="bold",
+                    fontproperties=fp)
+            label = config.mood_labels[entry.mood_score - 1]
+            ax.text(wd, w + 0.18, label, ha="center", va="center",
+                    fontsize=8, color="white", alpha=0.9,
+                    fontproperties=fp)
         else:
             if d > date.today():
                 text_color = "#444444"
             else:
                 text_color = "#666666"
-            ax.text(wd, w, str(d.day), ha="center", va="center",
-                    fontsize=10, color=text_color)
+            ax.text(wd, w + 0.5, str(d.day), ha="center", va="center",
+                    fontsize=10, color=text_color, fontproperties=fp)
 
-    # 星期标题
-    for i, name in enumerate(["一", "二", "三", "四", "五", "六", "日"]):
-        ax.text(i, -0.5, name, ha="center", va="top",
-                fontsize=10, color="#AAAAAA")
+    weekdays = ["一", "二", "三", "四", "五", "六", "日"]
+    for i, name in enumerate(weekdays):
+        ax.text(i, -0.3, name, ha="center", va="bottom",
+                fontsize=11, color="#AAAAAA", fontweight="bold",
+                fontproperties=fp)
 
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_title(f"{year}年{month}月", color="white", fontsize=12, pad=10)
+    ax.set_title(f"{year}年{month}月", color="white", fontsize=12, pad=10,
+                 fontproperties=fp)
 
     # 图例
     handles = [
-        mpatches.Patch(color=SCORE_COLOR_HEX[i], label=f"{i}分 {config.mood_labels[i-1]}")
+        mpatches.Patch(color=SCORE_COLOR_HEX[i],
+                        label=f"{i}分 {config.mood_labels[i-1]}")
         for i in range(1, 6)
     ]
     ax.legend(handles=handles, bbox_to_anchor=(1.01, 1), loc="upper left",
               fontsize=8, facecolor="#1a1a2e", edgecolor="#444444",
-              labelcolor="white")
+              labelcolor="white", prop=fp)
 
 
-def _draw_trend_line(ax, all_dates, scores, year, month):
+def _draw_trend_line(ax, all_dates, scores, year, month, font_path=None):
     """绘制月度趋势折线图。"""
+    from matplotlib.font_manager import FontProperties
+
     ax.set_facecolor("#16213e")
     ax.spines["bottom"].set_color("#444444")
     ax.spines["left"].set_color("#444444")
@@ -209,14 +240,23 @@ def _draw_trend_line(ax, all_dates, scores, year, month):
     ax.yaxis.grid(True, color="#333333", linewidth=0.5)
     ax.set_ylim(0.5, 5.5)
     ax.set_yticks([1, 2, 3, 4, 5])
-    ax.set_yticklabels([config.mood_emoji[i-1] for i in range(1, 6)],
-                      fontsize=12)
+    # Y 轴用文字标签，不用 emoji（字体不一定支持）
+    fp = FontProperties(fname=font_path) if font_path else None
+    labels = ax.set_yticklabels(
+        [f"{i}  {config.mood_labels[i - 1]}" for i in range(1, 6)],
+        fontsize=9, fontproperties=fp
+    )
+    # 给每个 Y 轴标签上色
+    for tick, score in zip(ax.get_yticklabels(), range(1, 6)):
+        tick.set_color(SCORE_COLOR_HEX[score])
 
     # x 轴：每隔 5 天显示一个日期标签
     x_vals = list(range(len(all_dates)))
     ax.set_xticks(x_vals[::5])
-    ax.set_xticklabels([str(d.day) for d in all_dates[::5]], color="#AAAAAA", fontsize=8)
-    ax.set_xlabel("日期（日）", color="white", fontsize=10)
+    ax.set_xticklabels([str(d.day) for d in all_dates[::5]],
+                       color="#AAAAAA", fontsize=8, fontproperties=fp)
+    ax.set_xlabel("日期（日）", color="white", fontsize=10,
+                  fontproperties=fp)
 
     # 折线：只连有记录的日期
     plot_dates, plot_scores = [], []
@@ -235,7 +275,8 @@ def _draw_trend_line(ax, all_dates, scores, year, month):
         avg = sum(plot_scores) / len(plot_scores)
         ax.axhline(avg, color="#FF6B6B", linewidth=1.2, linestyle="--",
                    alpha=0.7, label=f"均值 {avg:.1f}")
-        ax.legend(facecolor="#1a1a2e", edgecolor="#444444", labelcolor="white",
-                  fontsize=8)
+        ax.legend(facecolor="#1a1a2e", edgecolor="#444444",
+                  labelcolor="white", fontsize=8, prop=fp)
 
-    ax.set_title("情绪趋势", color="white", fontsize=12, pad=10)
+    ax.set_title("情绪趋势", color="white", fontsize=12, pad=10,
+                 fontproperties=fp)
