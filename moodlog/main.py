@@ -8,7 +8,7 @@ import click
 from rich.console import Console
 
 from . import __version__
-from .utils.art import splash_screen
+from .utils.art import splash_screen, PIXEL_LOGO, PIXEL_LOGO_COMPACT, PIXEL_LOGO_TINY
 from .commands import (
     record_cmd, today_cmd, view_cmd,
     trend_cmd, stats_cmd, export_cmd, remind_cmd, report_cmd,

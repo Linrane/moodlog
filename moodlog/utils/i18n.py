@@ -65,11 +65,12 @@ def _deep_update(base: dict, overrides: dict) -> None:
             base[k] = v
 
 
-def t(key: str, **kwargs) -> str:
+def t(key: str, default: str | None = None, **kwargs) -> str:
     """
     翻译函数。
     key 使用点分隔符，如 "record.prompt.score"
     支持格式化参数：t("stats.total_records", count=5)
+    支持 default 参数：key 不存在时返回 default 值
     """
     translations = _get_translations()
     parts = key.split(".")
@@ -78,7 +79,7 @@ def t(key: str, **kwargs) -> str:
         if isinstance(node, dict) and p in node:
             node = node[p]
         else:
-            return key.format(**kwargs) if kwargs else key
+            return default if default is not None else (key.format(**kwargs) if kwargs else key)
     if not isinstance(node, str):
         return str(node)
     return node.format(**kwargs) if kwargs else node

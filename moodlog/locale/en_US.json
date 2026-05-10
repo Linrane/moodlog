@@ -53,7 +53,12 @@
     "mood_quote_high": "You shine — don't forget it. ✨",
     "mood_quote_mid": "Ordinary days have their own beauty.",
     "mood_quote_low": "Allow yourself to feel low. Tomorrow will be better.",
-    "mood_quote_very_low": "The longest night still ends at dawn. 🌱"
+    "mood_quote_very_low": "The longest night still ends at dawn. 🌱",
+    "days_suffix": "days",
+    "avg_prefix": "avg",
+    "avg_suffix": "pts",
+    "tag_cloud": "Top Tags",
+    "monthly_avg": "Monthly Average"
   },
   "trend": {
     "title": "📈 Mood Trend (Last {days} Days)",

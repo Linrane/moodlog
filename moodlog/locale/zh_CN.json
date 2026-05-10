@@ -53,7 +53,12 @@
     "mood_quote_high": "你闪闪发光的样子，值得被记住。✨",
     "mood_quote_mid": "平平淡淡才是真。",
     "mood_quote_low": "允许自己偶尔低落，明天会更好。",
-    "mood_quote_very_low": "黑夜再长，黎明终将到来。🌱"
+    "mood_quote_very_low": "黑夜再长，黎明终将到来。🌱",
+    "days_suffix": "天",
+    "avg_prefix": "平均",
+    "avg_suffix": "分",
+    "tag_cloud": "高频标签",
+    "monthly_avg": "月均情绪"
   },
   "trend": {
     "title": "📈 情绪趋势（近 {days} 天）",
