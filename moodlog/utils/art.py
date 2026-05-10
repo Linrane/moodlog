@@ -143,7 +143,7 @@ def animate_splash(console_obj: Console | None = None) -> None:
     c = console_obj or console
 
     # 阶段 1：清屏 + Logo 显示
-    c.print("\033[2J\033[H", end="")
+    c.clear()
     c.print()
     c.print(_select_logo())
     _sleep(0.2)
