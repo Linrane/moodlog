@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "moodlog"
-version = "1.4.0"
+version = "1.4.1"
 description = "A minimalist terminal mood diary — record, review, and understand your emotions."
 readme = "README.md"
 license = { text = "MIT" }

@@ -22,7 +22,7 @@ from ..utils.i18n import t
 
 
 @click.command("record")
-@click.argument("score", type=click.IntRange(1, 5), required=False)
+@click.argument("score", type=click.INT, required=False)
 @click.option("-n", "--note", default="", help="日记内容（支持中文，用引号包裹）")
 @click.option("-t", "--tag", "tags", multiple=True, 
               help="标签（可多次使用：-t 工作 -t 编程；支持中文标签）")
@@ -39,6 +39,7 @@ def record_cmd(score, note, tags, record_date, force):
       3 = 😐 一般般
       4 = 😊 不错
       5 = 🥰 超级棒
+      100 = 🚀 宇宙无敌爆炸开心（彩蛋，仅支持命令行输入）
 
     \b
     示例：
@@ -48,12 +49,14 @@ def record_cmd(score, note, tags, record_date, force):
       moodlog record 4 -n "完成了项目" -t 工作 -t 编程  # 带标签
       moodlog record 3 -d 2026-05-08        # 补记过去的日期
       moodlog record 4 --force               # 强制覆盖已有记录
+      moodlog record 100                     # 彩蛋：宇宙无敌爆炸开心
 
     \b
     提示：
       - 不提供评分会进入交互式界面（带可视化评分选择器）
       - 不提供 -n 会在终端中提示输入
       - 标签可以帮助后续搜索和统计
+      - 100 分是隐藏彩蛋，不会在交互式界面显示
     """
     init_db()
 
@@ -70,6 +73,11 @@ def record_cmd(score, note, tags, record_date, force):
     # ── 交互式输入评分（若未提供）────────────────────────────────
     if score is None:
         score = score_picker_visual(console)
+    
+    # ── 验证评分（1-5 或 100）────────────────────────────────────
+    if score not in (1, 2, 3, 4, 5, 100):
+        print_error(f"无效的评分：{score}。请输入 1-5 或 100（彩蛋）")
+        sys.exit(1)
 
     # ── 检查是否已存在记录 ───────────────────────────────────────
     existing = get_mood_by_date(target_date)

@@ -33,8 +33,8 @@ _DEFAULTS: dict = {
         "path": str(_DEFAULT_DB_PATH),
     },
     "ui": {
-        "mood_emoji": ["😫", "😔", "😐", "😊", "🤩"],
-        "mood_labels": ["很差", "较差", "一般", "不错", "很棒"],
+        "mood_emoji": ["😫", "😔", "😐", "😊", "🤩", "🚀"],
+        "mood_labels": ["很差", "较差", "一般", "不错", "很棒", "宇宙无敌爆炸开心"],
         "default_trend_days": 7,
     },
     "reminder": {
@@ -120,7 +120,16 @@ class Config:
         return self._data.get("language", "zh_CN")
 
     def mood_display(self, score: int) -> str:
-        """返回 '4⭐ 不错' 格式的心情显示文本（i18n-aware）。"""
+        """返回 '4⭐ 不错' 格式的心情显示文本（i18n-aware）。
+        
+        特殊处理：
+          - score == 100: 宇宙无敌爆炸开心（彩蛋）
+          - 其他: 正常 1-5 分逻辑
+        """
+        # 彩蛋：100分
+        if score == 100:
+            return "100⭐ 🚀 宇宙无敌爆炸开心"
+        
         idx = max(0, min(4, score - 1))
         emoji = self.mood_emoji[idx]
         # 非中文模式下，从 i18n 加载翻译后的标签
