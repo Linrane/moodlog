@@ -39,9 +39,9 @@ def _try_plotext(entries: list[MoodEntry], title: str) -> bool:
     plt.yticks([1, 2, 3, 4, 5], ["😫1", "😔2", "😐3", "😊4", "🤩5"])
     plt.ylim(0.5, 5.5)
     plt.title(title)
-    plt.xlabel("日期")
-    plt.ylabel("情绪值")
-    plt.plot_size(70, _CHART_HEIGHT + 4)
+    plt.xlabel("                        日期")
+    plt.ylabel("            情绪值")
+    plt.plot_size(110, _CHART_HEIGHT + 10)
     plt.show()
     return True
 
