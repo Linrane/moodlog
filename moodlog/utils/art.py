@@ -12,6 +12,7 @@ import time
 from typing import Callable
 
 from rich.console import Console
+from rich.text import Text
 
 console = Console(markup=True)
 
@@ -58,10 +59,15 @@ PIXEL_LOGO_TINY = """
 
 # ── 情绪主题渐变条 ─────────────────────────────────────────
 
-MOOD_GRADIENT = (
-    "[red]█[/red][orange3]█[/orange3][yellow]█[/yellow]"
-    "[green]█[/green][cyan]█[/cyan][blue]█[/blue][magenta]█[/magenta]"
-)
+def _make_gradient_text(length: int = 60) -> Text:
+    """构建彩色渐变条 Text 对象，避免 markup 嵌套解析问题。"""
+    from rich.text import Text
+    colors = ["red", "orange3", "yellow", "green", "cyan", "blue", "magenta"]
+    bar = Text()
+    for i in range(length):
+        color = colors[i % len(colors)]
+        bar.append("█", style=color)
+    return bar
 
 
 # ── 心情符号进度动画帧 ─────────────────────────────────────
@@ -150,8 +156,7 @@ def animate_splash(console_obj: Console | None = None) -> None:
 
     # 阶段 2：情绪渐变条
     c.print()
-    gradient = MOOD_GRADIENT * 6
-    c.print(f"[dim]{gradient[:60]}[/dim]")
+    c.print(_make_gradient_text(60))
     _sleep(0.15)
 
     # 阶段 3：版本信息
@@ -184,7 +189,8 @@ def animate_splash(console_obj: Console | None = None) -> None:
 
     # 阶段 6：结束
     c.print()
-    c.print(f"  [dim]{MOOD_GRADIENT * 4}[/dim]")
+    from rich.text import Text as TextCls
+    c.print(TextCls.assemble(TextCls("  "), _make_gradient_text(28)))
     c.print()
     c.print("  [dim]Tip: moodlog --help 查看所有命令[/dim]")
     c.print()
