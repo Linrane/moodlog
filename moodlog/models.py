@@ -28,8 +28,9 @@ class MoodEntry:
     tags: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        if not (1 <= self.mood_score <= 5):
-            raise ValueError(f"mood_score 必须在 1-5 之间，收到: {self.mood_score}")
+        # 允许 1-5 分正常记录，100 分为隐藏彩蛋
+        if not (1 <= self.mood_score <= 5 or self.mood_score == 100):
+            raise ValueError(f"mood_score 必须在 1-5 之间，或 100（彩蛋），收到: {self.mood_score}")
 
 
 @dataclass

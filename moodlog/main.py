@@ -52,10 +52,10 @@ BANNER = """[bold cyan]
   moodlog export -f markdown -o ~/diary.md
 
 \b
-更多信息：
-  配置文件: ~/.moodlog/config.json
-  数据库:   ~/.moodlog/moodlog.db
-  文档:     https://github.com/Linrane/MoodLog
+    更多信息：
+        配置文件: moodlog/config.toml
+        数据库:   data/moodlog.db
+        文档:     https://github.com/linrane/MoodLog
 
 运行 'moodlog COMMAND --help' 查看子命令详情。
 """)
