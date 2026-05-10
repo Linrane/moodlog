@@ -101,7 +101,6 @@ def stats_cmd(month, year, calendar):
     ))
 
     # ── 连续打卡 ───────────────────────────────────────────────
-    from ..utils.display import _calculate_streak
     streak = _calculate_streak(get_all_moods())
     console.print()
     console.print(Panel(streak_badge(streak), border_style="dim", padding=(0, 1)))

@@ -253,14 +253,14 @@ def month_calendar(year: int, month: int, entries: list[MoodEntry]) -> None:
                 if entry:
                     color = SCORE_COLORS.get(entry.mood_score, "white")
                     emoji = config.mood_emoji[entry.mood_score - 1]
-                    t = Text(justify="center")
-                    t.append(f"{d:2d}", style=f"bold {color}")
-                    t.append(emoji)
-                    cells.append(t)
+                    cell_text = Text(justify="center")
+                    cell_text.append(f"{d:2d}", style=f"bold {color}")
+                    cell_text.append(emoji)
+                    cells.append(cell_text)
                 elif day_date == today:
-                    t = Text(justify="center")
-                    t.append(f"{d:2d} ●", style="bold yellow")
-                    cells.append(t)
+                    cell_text = Text(justify="center")
+                    cell_text.append(f"{d:2d} ●", style="bold yellow")
+                    cells.append(cell_text)
                 elif day_date > today:
                     cells.append(Text(f"{d:2d}", style="dim", justify="center"))
                 else:
