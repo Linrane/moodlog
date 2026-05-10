@@ -20,13 +20,33 @@ from ..utils.i18n import t
 
 @click.command("report")
 @click.option("--month", "-m", type=int, default=None,
-              help="指定月份（1-12），默认当月）")
+              help="指定月份（1-12），默认当月")
 @click.option("--year", "-y", type=int, default=None,
-              help="指定年份，默认当年）")
+              help="指定年份，默认当年")
 @click.option("--output", "-o", "output_path", default=None,
               help="输出图片路径（PNG），不指定则保存到 ~/moodlog_reports/")
 def report_cmd(month, year, output_path):
-    """🖼️ 生成月度情绪报告图片（PNG）"""
+    """🖼️ 生成月度情绪报告图片（PNG）。
+
+    生成一张精美的情绪报告图片，包含：
+      - 月度情绪概览
+      - 每日情绪分布日历
+      - 情绪趋势图表
+      - 高频标签统计
+
+    \b
+    示例：
+      moodlog report              # 生成当月的报告
+      moodlog report -m 5         # 生成 5 月份的报告
+      moodlog report -m 5 -y 2025  # 生成 2025 年 5 月的报告
+      moodlog report -o report.png  # 指定输出文件路径
+
+    \b
+    提示：
+      - 默认保存到 ~/moodlog_reports/ 目录
+      - 生成的图片可以直接分享到社交媒体
+      - 需要安装 Pillow 库：pip install Pillow
+    """
     init_db()
 
     today = date.today()

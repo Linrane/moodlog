@@ -23,18 +23,37 @@ from ..utils.i18n import t
 
 @click.command("record")
 @click.argument("score", type=click.IntRange(1, 5), required=False)
-@click.option("-n", "--note", default="", help="日记内容（引号包裹）")
-@click.option("-t", "--tag", "tags", multiple=True, help="标签（可多次使用：-t 工作 -t 运动）")
-@click.option("-d", "--date", "record_date", default=None, help="记录日期（默认今天），格式 YYYY-MM-DD")
-@click.option("--force", is_flag=True, default=False, help="已有记录时直接覆盖，不询问")
+@click.option("-n", "--note", default="", help="日记内容（支持中文，用引号包裹）")
+@click.option("-t", "--tag", "tags", multiple=True, 
+              help="标签（可多次使用：-t 工作 -t 编程；支持中文标签）")
+@click.option("-d", "--date", "record_date", default=None, 
+              help="记录日期（默认今天），格式 YYYY-MM-DD")
+@click.option("--force", is_flag=True, default=False, 
+              help="已有记录时直接覆盖，不询问")
 def record_cmd(score, note, tags, record_date, force):
     """📝 记录心情（评分 1-5）。
 
+    评分说明：
+      1 = 😢 非常糟糕
+      2 = 😕 不太好
+      3 = 😐 一般般
+      4 = 😊 不错
+      5 = 🥰 超级棒
+
     \b
     示例：
-      moodlog record 4
-      moodlog record 4 -n "今天完成了项目" -t 工作 -t 编程
-      moodlog record 3 -d 2026-05-08
+      moodlog record 4                      # 快速记录评分 4
+      moodlog record                         # 进入交互式记录
+      moodlog record 5 -n "今天超级开心！"   # 带日记内容
+      moodlog record 4 -n "完成了项目" -t 工作 -t 编程  # 带标签
+      moodlog record 3 -d 2026-05-08        # 补记过去的日期
+      moodlog record 4 --force               # 强制覆盖已有记录
+
+    \b
+    提示：
+      - 不提供评分会进入交互式界面（带可视化评分选择器）
+      - 不提供 -n 会在终端中提示输入
+      - 标签可以帮助后续搜索和统计
     """
     init_db()
 

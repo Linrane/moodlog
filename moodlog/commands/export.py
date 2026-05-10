@@ -72,13 +72,36 @@ def _to_csv(entries) -> str:
     type=click.Choice(["markdown", "json", "csv"], case_sensitive=False),
     default="markdown",
     show_default=True,
-    help="导出格式",
+    help="导出格式：markdown（易读）、json（程序处理）、csv（表格）",
 )
-@click.option("--output", "-o", default=None, help="输出文件路径（默认打印到终端）")
-@click.option("--from", "date_from", default=None, help="开始日期（YYYY-MM-DD）")
-@click.option("--to", "date_to", default=None, help="结束日期（YYYY-MM-DD）")
+@click.option("--output", "-o", default=None, 
+              help="输出文件路径（默认打印到终端）")
+@click.option("--from", "date_from", default=None, 
+              help="开始日期（YYYY-MM-DD）")
+@click.option("--to", "date_to", default=None, 
+              help="结束日期（YYYY-MM-DD）")
 def export_cmd(fmt, output, date_from, date_to):
-    """📤 导出日记数据。"""
+    """📤 导出日记数据。
+
+    支持三种格式导出：
+      - markdown：易读的文本格式，适合打印或分享
+      - json：结构化数据，适合程序处理
+      - csv：表格格式，适合 Excel 打开
+
+    \b
+    示例：
+      moodlog export                        # 导出所有数据为 Markdown（打印到终端）
+      moodlog export -f json                # 导出为 JSON 格式
+      moodlog export -f csv -o data.csv     # 导出为 CSV 文件
+      moodlog export -o diary.md            # 导出到指定文件
+      moodlog export --from 2026-01-01 --to 2026-12-31  # 导出指定范围
+
+    \b
+    提示：
+      - 不指定 --output 时，内容会打印到终端
+      - CSV 格式中标签用 "|" 分隔
+      - JSON 格式包含所有字段（日期、评分、标签、备注等）
+    """
     init_db()
 
     # 获取数据

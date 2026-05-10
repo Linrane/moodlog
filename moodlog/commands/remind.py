@@ -98,14 +98,50 @@ def _send_notification() -> None:
 
 @click.group("remind")
 def remind_cmd():
-    """⏰ 管理每日提醒。"""
+    """⏰ 管理每日提醒。
+
+    设置定时提醒，帮助你养成每天记录心情的好习惯。
+
+    \b
+    子命令：
+      moodlog remind on      开启每日提醒
+      moodlog remind off     关闭每日提醒
+      moodlog remind status  查看提醒状态
+      moodlog remind notify  发送测试通知（内部使用）
+
+    \b
+    示例：
+      moodlog remind on              # 开启提醒（使用默认时间）
+      moodlog remind on -t 20:00     # 设置提醒时间为 20:00
+      moodlog remind off             # 关闭提醒
+      moodlog remind status          # 查看当前提醒状态
+
+    \b
+    提示：
+      - Windows 需要管理员权限创建计划任务
+      - macOS/Linux 使用 crontab 管理提醒
+      - 默认提醒时间：{config.reminder_time}
+    """.format(config=config)
 
 
 @remind_cmd.command("on")
 @click.option("--time", "-t", "remind_time", default=None,
               help="提醒时间（HH:MM），默认使用配置文件中的时间")
 def remind_on(remind_time):
-    """开启每日记录提醒。"""
+    """开启每日记录提醒。
+
+    \b
+    示例：
+      moodlog remind on              # 使用默认时间开启
+      moodlog remind on -t 20:00     # 设置每天 20:00 提醒
+      moodlog remind on --time 09:30 # 设置每天 09:30 提醒
+
+    \b
+    提示：
+      - Windows 会弹出 UAC 权限请求（需要管理员权限）
+      - macOS/Linux 会自动添加到 crontab
+      - 开启后会在指定时间收到系统通知
+    """
     from ..utils import art
     t_str = remind_time or config.reminder_time
     try:
@@ -166,7 +202,17 @@ def remind_on(remind_time):
 
 @remind_cmd.command("off")
 def remind_off():
-    """关闭每日记录提醒。"""
+    """关闭每日记录提醒。
+
+    \b
+    示例：
+      moodlog remind off
+
+    \b
+    提示：
+      - Windows 需要管理员权限删除计划任务
+      - 如果之前没有开启提醒，会显示警告（不是错误）
+    """
     if _IS_WINDOWS:
         cmd = f'schtasks /Delete /TN "{_TASK_NAME}" /F'
         result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
@@ -211,7 +257,17 @@ def remind_off():
 
 @remind_cmd.command("status")
 def remind_status():
-    """查看提醒状态。"""
+    """查看提醒状态。
+
+    \b
+    示例：
+      moodlog remind status
+
+    \b
+    输出：
+      - 如果已开启：显示计划任务/crontab 详情
+      - 如果未开启：提示"未设置提醒"
+    """
     if _IS_WINDOWS:
         result = subprocess.run(
             f'schtasks /Query /TN "{_TASK_NAME}"',
@@ -236,5 +292,15 @@ def remind_status():
 
 @remind_cmd.command("notify")
 def remind_notify():
-    """发送 MoodLog 记录提醒通知（供计划任务调用）。"""
+    """发送 MoodLog 记录提醒通知（供计划任务调用）。
+
+    \b
+    说明：
+      这个命令通常不需要手动调用，它由计划任务自动触发。
+      可以用于测试通知是否正常工作。
+
+    \b
+    示例：
+      moodlog remind notify
+    """
     _send_notification()

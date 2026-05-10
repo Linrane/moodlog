@@ -26,10 +26,28 @@ from ..utils.i18n import t
 
 @click.command("trend")
 @click.argument("days", type=int, required=False)
-@click.option("--month", "-m", default=None, type=int, help="查看指定月份（如 5 表示5月）")
-@click.option("--year", "-y", default=None, type=int, help="指定年份（与 --month 配合，默认当年）")
+@click.option("--month", "-m", default=None, type=int, 
+              help="查看指定月份（如 5 表示5月）")
+@click.option("--year", "-y", default=None, type=int, 
+              help="指定年份（与 --month 配合，默认当年）")
 def trend_cmd(days, month, year):
-    """📈 查看情绪趋势图。"""
+    """📈 查看情绪趋势图。
+
+    以 ASCII 图表形式展示情绪变化趋势，直观看到情绪波动。
+
+    \b
+    示例：
+      moodlog trend              # 查看最近 7 天趋势（默认）
+      moodlog trend 30           # 查看最近 30 天趋势
+      moodlog trend --month 5    # 查看 5 月份趋势
+      moodlog trend -m 5 -y 2025  # 查看 2025 年 5 月趋势
+
+    \b
+    提示：
+      - 默认显示最近 7 天
+      - 可以用 --month 查看任意月份
+      - 图表使用 Rich 库绘制，支持现代终端
+    """
     init_db()
 
     today = date.today()
@@ -57,11 +75,37 @@ def trend_cmd(days, month, year):
 
 
 @click.command("stats")
-@click.option("--month", "-m", default=None, type=int, help="统计指定月份")
-@click.option("--year", "-y", default=None, type=int, help="指定年份（默认当年）")
-@click.option("--calendar", "-c", is_flag=True, default=False, help="显示月历视图")
+@click.option("--month", "-m", default=None, type=int, 
+              help="统计指定月份（1-12）")
+@click.option("--year", "-y", default=None, type=int, 
+              help="指定年份（默认当年）")
+@click.option("--calendar", "-c", is_flag=True, default=False, 
+              help="显示月历视图（直观看到每天的评分）")
 def stats_cmd(month, year, calendar):
-    """📊 查看情绪统计面板。"""
+    """📊 查看情绪统计面板。
+
+    显示丰富的统计分析，包括：
+      - 总记录天数、平均分、最好/最差日子
+      - 连续打卡天数（ streak ）
+      - 情绪小结语（根据平均分自动生成）
+      - 情绪分布图（1-5 分各多少天）
+      - 高频标签统计
+      - 月均情绪变化
+
+    \b
+    示例：
+      moodlog stats              # 查看全部统计
+      moodlog stats -c           # 查看统计 + 月历视图
+      moodlog stats -m 5         # 查看 5 月份统计
+      moodlog stats -y 2025      # 查看 2025 年统计
+      moodlog stats -m 5 -y 2025 -c  # 查看指定年月 + 月历
+
+    \b
+    提示：
+      - 月历视图会用颜色标记每天的心情
+      - 没有记录的日期显示为空白
+      - 标签统计只显示前 10 个高频标签
+    """
     init_db()
 
     today = date.today()

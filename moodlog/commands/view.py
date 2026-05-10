@@ -21,7 +21,17 @@ from ..utils.i18n import t
 
 @click.command("today")
 def today_cmd():
-    """📅 查看今天的心情记录。"""
+    """📅 查看今天的心情记录。
+
+    \b
+    示例：
+      moodlog today
+
+    \b
+    提示：
+      如果今天还没有记录，会提示你使用 'moodlog record' 记录。
+      查看其他日期请使用 'moodlog view <日期>'。
+    """
     init_db()
     entry = get_mood_by_date(date.today())
     if entry is None:
@@ -33,19 +43,34 @@ def today_cmd():
 
 @click.command("view")
 @click.argument("target_date", required=False)
-@click.option("--from", "date_from", default=None, help="开始日期（YYYY-MM-DD）")
-@click.option("--to", "date_to", default=None, help="结束日期（YYYY-MM-DD）")
-@click.option("--last", default=None, type=int, help="最近 N 天")
-@click.option("--search", "-s", default=None, help="关键词搜索（日记内容 + 标签）")
+@click.option("--from", "date_from", default=None, 
+              help="开始日期（YYYY-MM-DD）")
+@click.option("--to", "date_to", default=None, 
+              help="结束日期（YYYY-MM-DD）")
+@click.option("--last", default=None, type=int, 
+              help="最近 N 天（例如：--last 30）")
+@click.option("--search", "-s", default=None, 
+              help="关键词搜索（搜索日记内容和标签）")
 def view_cmd(target_date, date_from, date_to, last, search):
     """🔍 查看历史日记。
 
+    支持多种查看方式：按日期、按范围、按关键词搜索。
+
     \b
     示例：
-      moodlog view 2026-05-09        # 查看某天
-      moodlog view --last 14         # 最近14天
-      moodlog view --from 2026-05-01 --to 2026-05-31
-      moodlog view -s 工作           # 搜索关键词
+      moodlog view                          # 查看最近 7 天
+      moodlog view 2026-05-09              # 查看某一天
+      moodlog view --last 14               # 最近 14 天
+      moodlog view --last 30               # 最近 30 天
+      moodlog view --from 2026-05-01 --to 2026-05-31  # 指定范围
+      moodlog view -s 工作                 # 搜索关键词"工作"
+      moodlog view -s "项目完成"           # 搜索完整短语
+
+    \b
+    提示：
+      - 不指定任何参数时，默认显示最近 7 天
+      - 搜索功能会匹配日记内容和标签
+      - 日期格式必须是 YYYY-MM-DD（如 2026-05-09）
     """
     init_db()
 
