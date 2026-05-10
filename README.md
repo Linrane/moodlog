@@ -273,10 +273,6 @@ pytest --cov=moodlog --cov-report=html  # HTML 报告
 
 ---
 
-# 注
-
-若在使用过程中可以联系凌然进行修正，或者加入凌然成为开发者共创和开发维护！
-
 ## License
 
 MIT
