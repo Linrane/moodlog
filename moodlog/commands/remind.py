@@ -1,15 +1,13 @@
 """
 MoodLog - commands/remind.py
 管理每日提醒（Windows 计划任务 / macOS/Linux crontab）。
-v2：接入 i18n。
+v3：提醒改为发送系统通知，不再一闪而过。
 """
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import sys
-from pathlib import Path
 
 import click
 from rich.console import Console
@@ -22,9 +20,18 @@ _IS_WINDOWS = os.name == "nt"
 _TASK_NAME = "MoodLog_DailyReminder"
 
 
-def _get_moodlog_exe() -> str | None:
-    """获取 moodlog 可执行文件路径。"""
-    return shutil.which("moodlog")
+def _send_notification() -> None:
+    """发送系统通知（使用 plyer）。"""
+    try:
+        from plyer import notification
+        notification.notify(
+            title="MoodLog 提醒",
+            message="该记录今天的心情啦 🙂",
+            app_name="MoodLog",
+            timeout=10,
+        )
+    except Exception:
+        pass
 
 
 @click.group("remind")
@@ -48,13 +55,11 @@ def remind_on(remind_time):
         return
 
     if _IS_WINDOWS:
-        exe = _get_moodlog_exe()
-        if not exe:
-            print_error(t("remind.moodlog_not_found"))
-            return
+        py = sys.executable.replace("\\", "\\\\")
         cmd = (
             f'schtasks /Create /SC DAILY /TN "{_TASK_NAME}" '
-            f'/TR "{exe} today" /ST {t_str} /F'
+            f'/TR "\\"{py}\\" -m moodlog remind notify" '
+            f'/ST {t_str} /F /RL HIGHEST'
         )
         result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
         if result.returncode == 0:
@@ -64,8 +69,8 @@ def remind_on(remind_time):
             if result.stderr:
                 console.print(f"[dim]{result.stderr}[/dim]")
     else:
-        exe = _get_moodlog_exe() or "moodlog"
-        entry = f"{t_str.split(':')[0]} {t_str.split(':')[1]} * * * {exe} today"
+        py = sys.executable
+        entry = f'{t_str.split(":")[0]} {t_str.split(":")[1]} "{py}" -m moodlog remind notify'
         result = subprocess.run(["crontab", "-l"], capture_output=True, text=True)
         lines = [l for l in result.stdout.splitlines() if "moodlog" not in l.lower()]
         lines.append(entry)
@@ -123,3 +128,9 @@ def remind_status():
                     console.print(line, style="dim")
         else:
             print_warning(t("remind.status_off"))
+
+
+@remind_cmd.command("notify")
+def remind_notify():
+    """发送 MoodLog 记录提醒通知（供计划任务调用）。"""
+    _send_notification()
