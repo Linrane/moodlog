@@ -37,7 +37,7 @@ _CREATE_MOODS = """
 CREATE TABLE IF NOT EXISTS moods (
     id          INTEGER  PRIMARY KEY AUTOINCREMENT,
     date        DATE     NOT NULL UNIQUE,
-    mood_score  INTEGER  NOT NULL CHECK(mood_score BETWEEN 1 AND 5),
+    mood_score  INTEGER  NOT NULL CHECK(mood_score BETWEEN 1 AND 5 OR mood_score = 100),
     note        TEXT     NOT NULL DEFAULT '',
     created_at  DATETIME NOT NULL DEFAULT (datetime('now','localtime')),
     updated_at  DATETIME NOT NULL DEFAULT (datetime('now','localtime'))
@@ -84,13 +84,34 @@ def get_connection(db_path: Path | None = None) -> Generator[sqlite3.Connection,
 
 # ── 初始化 ────────────────────────────────────────────────────────
 
+
+
+def _migrate_moods_table(conn: sqlite3.Connection) -> None:
+    """迁移 moods 表：移除旧 CHECK 约束（如果存在）。"""
+    try:
+        conn.execute("INSERT INTO moods (date, mood_score) VALUES ('2099-01-01', 100)")
+        conn.execute("DELETE FROM moods WHERE date = '2099-01-01'")
+        return  # 无需迁移
+    except sqlite3.IntegrityError:
+        pass  # 需要迁移
+
+    # 执行迁移
+    conn.execute("ALTER TABLE moods RENAME TO moods_old")
+    conn.execute(_CREATE_MOODS)
+    conn.execute("""
+        INSERT INTO moods (id, date, mood_score, note, created_at, updated_at)
+        SELECT id, date, mood_score, note, created_at, updated_at FROM moods_old
+    """)
+    conn.execute("DROP TABLE moods_old")
+
 def init_db(db_path: Path | None = None) -> None:
-    """创建数据表（幂等操作）。"""
+    """创建数据表（幂等操作），并执行必要的迁移。"""
     with get_connection(db_path) as conn:
         conn.execute(_CREATE_MOODS)
         conn.execute(_CREATE_TAGS)
         conn.execute(_CREATE_IDX_DATE)
         conn.execute(_CREATE_IDX_TAG)
+        _migrate_moods_table(conn)
 
 
 # ── 写操作 ────────────────────────────────────────────────────────
