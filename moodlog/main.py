@@ -12,6 +12,7 @@ from .utils.art import splash_screen, PIXEL_LOGO, PIXEL_LOGO_COMPACT, PIXEL_LOGO
 from .commands import (
     record_cmd, today_cmd, view_cmd,
     trend_cmd, stats_cmd, export_cmd, remind_cmd, report_cmd,
+    delete_cmd,
 )
 
 console = Console()
@@ -42,7 +43,7 @@ BANNER = """[bold cyan]
   📝 记录           record, today
   🔍 查看           view, trend, stats
   📤 导出           export, report
-  ⚙️  管理           remind
+  ⚙️  管理           remind, delete
 
 \b
 常用示例：
@@ -82,6 +83,7 @@ cli.add_command(stats_cmd, name="stats")
 cli.add_command(export_cmd, name="export")
 cli.add_command(remind_cmd, name="remind")
 cli.add_command(report_cmd, name="report")
+cli.add_command(delete_cmd, name="delete")
 
 
 # 支持 `python -m moodlog` 方式运行

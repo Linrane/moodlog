@@ -5,6 +5,7 @@ from .stats import trend_cmd, stats_cmd
 from .export import export_cmd
 from .remind import remind_cmd
 from .report import report_cmd
+from .delete import delete_cmd
 
 __all__ = [
     "record_cmd",
@@ -15,4 +16,5 @@ __all__ = [
     "export_cmd",
     "remind_cmd",
     "report_cmd",
+    "delete_cmd",
 ]

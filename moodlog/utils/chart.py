@@ -27,7 +27,8 @@ def _try_plotext(entries: list[MoodEntry], title: str) -> bool:
         return False
 
     dates = [str(e.date) for e in entries]
-    scores = [e.mood_score for e in entries]
+    # 100分彩蛋在图上截断为5，均值计算也排除100
+    scores = [min(e.mood_score, 5) for e in entries]
     # 只取最后一位数字做 x 标签，避免堆叠
     x_labels = [d[-5:] for d in dates]  # "MM-DD"
 
@@ -36,7 +37,7 @@ def _try_plotext(entries: list[MoodEntry], title: str) -> bool:
     plt.plot(scores, marker="braille", color="cyan+")
     plt.scatter(scores, marker="dot", color="green+")
     plt.xticks(list(range(1, len(dates) + 1)), x_labels)
-    plt.yticks([1, 2, 3, 4, 5], ["😫1", "😔2", "😐3", "😊4", "🤩5"])
+    plt.yticks([1, 2, 3, 4, 5], ["😔1", "😕2", "😐3", "😊4", "🤩5"])
     plt.ylim(0.5, 5.5)
     plt.title(title)
     plt.xlabel("                        日期")
@@ -57,9 +58,14 @@ def _ascii_bar_chart(entries: list[MoodEntry], title: str) -> None:
     for e in entries:
         color = SCORE_COLORS.get(e.mood_score, "white")
         label = f"{e.date}"[-5:]  # MM-DD
-        bar_len = round(e.mood_score / max_score * 24)
+        # 100分：满格 + 专属 emoji
+        if e.mood_score == 100:
+            bar_len = 24
+            emoji = "🚀"
+        else:
+            bar_len = round(e.mood_score / max_score * 24)
+            emoji = config.mood_emoji[e.mood_score - 1]
         bar = "█" * bar_len
-        emoji = config.mood_emoji[e.mood_score - 1]
         line = Text()
         line.append(f"  {label} ", style="dim")
         line.append(bar, style=color)

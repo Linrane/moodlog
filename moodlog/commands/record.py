@@ -65,7 +65,11 @@ def record_cmd(score, note, tags, record_date, force):
         try:
             target_date = date.fromisoformat(record_date)
         except ValueError:
-            print_error(t("record.messages.date_format_error", date=record_date))
+            print_error(f"日期格式不对哦 😅  应该是 YYYY-MM-DD，例如 2026-05-11")
+            sys.exit(1)
+        # 防呆：不允许记录太遥远的未来（1年以上）
+        if (target_date - date.today()).days > 365:
+            print_error("还没到那天呢！不支持记录 1 年后的日期 🗓️")
             sys.exit(1)
     else:
         target_date = date.today()
@@ -76,7 +80,12 @@ def record_cmd(score, note, tags, record_date, force):
     
     # ── 验证评分（1-5 或 100）────────────────────────────────────
     if score not in (1, 2, 3, 4, 5, 100):
-        print_error(f"无效的评分：{score}。请输入 1-5 或 100（彩蛋）")
+        if score < 1:
+            print_error("评分不能是负数或零哦 😅  请输入 1-5 之间的数字")
+        elif score > 5 and score != 100:
+            print_error(f"没有 {score} 分这个评分哦 🤔  请输入 1-5（或者试试 100 分的彩蛋？）")
+        else:
+            print_error("请输入 1-5 之间的整数评分")
         sys.exit(1)
 
     # ── 检查是否已存在记录 ───────────────────────────────────────
@@ -89,10 +98,16 @@ def record_cmd(score, note, tags, record_date, force):
 
     # ── 交互式输入日记（若未通过 -n 提供）──────────────────────────
     if not note:
-        note = Prompt.ask(
-            f"[bold cyan]{t('record.prompt.note')}[/bold cyan]",
-            default="",
-        )
+        if score == 100:
+            note = Prompt.ask(
+                "[bold bright_magenta]🚀 宇宙无敌爆炸开心！！写点什么留念吧（可直接回车跳过）[/bold bright_magenta]",
+                default="",
+            )
+        else:
+            note = Prompt.ask(
+                f"[bold cyan]{t('record.prompt.note')}[/bold cyan]",
+                default="",
+            )
 
     # ── 写入 ─────────────────────────────────────────────────────
     entry, is_new = insert_or_update_mood(
@@ -109,7 +124,3 @@ def record_cmd(score, note, tags, record_date, force):
     animate_mood_flash(score, console)
     print_success(t(action_key, date=target_date, display=config.mood_display(score)))
     console.print()
-
-
-def print_info_neutral(msg: str) -> None:
-    console.print(f"[dim]{msg}[/dim]")

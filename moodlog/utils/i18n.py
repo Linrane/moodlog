@@ -94,25 +94,31 @@ def reload_translations() -> None:
 # ── 情绪标签 / emoji 多语言辅助 ────────────────────────────────
 
 def mood_label(score: int) -> str:
-    """返回指定分数的情绪标签（当前语言）。"""
+    """返回指定分数的情绪标签（当前语言）。兼容100分彩蛋。"""
+    if score == 100:
+        return "宇宙无敌爆炸开心"
     key = f"record.labels.{score}"
     result = t(key)
     if result == key:
-        return config.mood_labels[score - 1]
+        idx = max(0, min(4, score - 1))
+        return config.mood_labels[idx]
     return result
 
 
 def mood_emoji_char(score: int) -> str:
-    """返回指定分数的 emoji 字符（当前语言，fallback 到 config）。"""
+    """返回指定分数的 emoji 字符（当前语言，fallback 到 config）。兼容100分彩蛋。"""
+    if score == 100:
+        return "🚀"
     lang = _get_active_lang()
     if lang != _FALLBACK_LANG:
         translations = _get_translations()
         emojis = translations.get("record", {}).get("emoji", [])
-        if emojis and len(emojis) >= score:
-            return emojis[score - 1]
+        idx = max(0, min(4, score - 1))
+        if emojis and len(emojis) > idx:
+            return emojis[idx]
     emojis = config.mood_emoji
-    if emojis and len(emojis) >= score:
-        return emojis[score - 1]
+    if emojis and len(emojis) > max(0, min(4, score - 1)):
+        return emojis[max(0, min(4, score - 1))]
     return "😐"
 
 

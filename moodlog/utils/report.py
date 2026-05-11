@@ -95,6 +95,7 @@ SCORE_COLOR_HEX = {
     3: "#F1C40F",   # 黄
     4: "#2ECC71",   # 绿
     5: "#1ABC9C",   # 青绿
+    100: "#FF00FF", # 彩蛋：亮洋红
 }
 
 
@@ -195,7 +196,11 @@ def _draw_calendar_heatmap(ax, year, month, entry_map, all_dates, scores,
             ax.text(wd, w + 0.5, str(d.day), ha="center", va="center",
                     fontsize=12, color="white", fontweight="bold",
                     fontproperties=fp)
-            label = config.mood_labels[entry.mood_score - 1]
+            # 100分彩蛋：安全访问，兼容越界
+            if entry.mood_score == 100:
+                label = "🚀宇宙无敌开心"
+            else:
+                label = config.mood_labels[entry.mood_score - 1]
             ax.text(wd, w + 0.18, label, ha="center", va="center",
                     fontsize=8, color="white", alpha=0.9,
                     fontproperties=fp)
@@ -224,6 +229,11 @@ def _draw_calendar_heatmap(ax, year, month, entry_map, all_dates, scores,
                         label=f"{i}分 {config.mood_labels[i-1]}")
         for i in range(1, 6)
     ]
+    # 100分彩蛋专属图例项
+    handles.append(mpatches.Patch(
+        color=SCORE_COLOR_HEX[100],
+        label="100分 🚀 宇宙无敌开心"
+    ))
     ax.legend(handles=handles, bbox_to_anchor=(1.01, 1), loc="upper left",
               fontsize=8, facecolor="#1a1a2e", edgecolor="#444444",
               labelcolor="white", prop=fp)
@@ -258,12 +268,12 @@ def _draw_trend_line(ax, all_dates, scores, year, month, font_path=None):
     ax.set_xlabel("日期（日）", color="white", fontsize=10,
                   fontproperties=fp)
 
-    # 折线：只连有记录的日期
+    # 折线：只连有记录的日期，100分截断为5避免越界
     plot_dates, plot_scores = [], []
     for d, s in zip(all_dates, scores):
         if s is not None:
             plot_dates.append(d)
-            plot_scores.append(s)
+            plot_scores.append(min(s, 5))  # 100分在图上截断为5
 
     if plot_scores:
         x_indices = [all_dates.index(d) for d in plot_dates]
@@ -271,8 +281,9 @@ def _draw_trend_line(ax, all_dates, scores, year, month, font_path=None):
                 marker="o", markersize=6, markerfacecolor="#00d2ff",
                 markeredgecolor="white", markeredgewidth=1, alpha=0.9)
 
-        # 平均分参考线
-        avg = sum(plot_scores) / len(plot_scores)
+        # 平均分参考线（排除100分彩蛋）
+        valid = [s for s in plot_scores if s != 100]
+        avg = sum(valid) / len(valid) if valid else 0
         ax.axhline(avg, color="#FF6B6B", linewidth=1.2, linestyle="--",
                    alpha=0.7, label=f"均值 {avg:.1f}")
         ax.legend(facecolor="#1a1a2e", edgecolor="#444444",

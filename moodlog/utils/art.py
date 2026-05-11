@@ -228,12 +228,28 @@ def animate_mood_flash(
     score: int,
     console: Console | None = None,
 ) -> None:
-    """记录成功后的"心情闪光"效果。"""
+    """记录成功后的"心情闪光"效果。100分彩蛋有专属动画。"""
     c = console or Console()
+
+    # 彩蛋：100分专属动画
+    if score == 100:
+        frames = [
+            "[bold bright_magenta]  🚀  🌟  🚀  🌟  🚀  [/bold bright_magenta]",
+            "[bold bright_cyan]  ✨  🎉  ✨  🎉  ✨  [/bold bright_cyan]",
+            "[bold bright_magenta]  🚀  🌟  🚀  🌟  🚀  [/bold bright_magenta]",
+        ]
+        for frame in frames:
+            c.print(frame)
+            time.sleep(0.2)
+            c.print("\033[F", end="")
+        c.print("[bold bright_magenta]  🚀 宇宙无敌爆炸开心！！！  [/bold bright_magenta]")
+        return
+
     emoji_list = ["😔", "😕", "😐", "🙂", "😄"]
     color_list = ["red", "dark_orange", "yellow", "green", "bright_green"]
-    emoji = emoji_list[score - 1]
-    color = color_list[score - 1]
+    idx = max(0, min(4, score - 1))
+    emoji = emoji_list[idx]
+    color = color_list[idx]
 
     frames = [
         f"[bold {color}]    {emoji}  {emoji}  {emoji}  [/bold {color}]",

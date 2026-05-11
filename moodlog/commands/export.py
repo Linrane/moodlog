@@ -20,11 +20,19 @@ from ..utils.display import print_success, print_warning, print_error, console
 from ..utils.i18n import t
 
 
+def _mood_label_safe(score: int) -> str:
+    """安全获取情绪标签，兼容100分彩蛋。"""
+    if score == 100:
+        return "宇宙无敌爆炸开心"
+    idx = max(0, min(4, score - 1))
+    return config.mood_labels[idx]
+
+
 def _to_markdown(entries) -> str:
     lines = ["# MoodLog 心情日记导出\n"]
     for e in entries:
         mood_str = config.mood_display(e.mood_score)
-        tags_str = " ".join(f"#{t}" for t in e.tags)
+        tags_str = " ".join(f"#{tg}" for tg in e.tags)
         lines.append(f"## {e.date}  {mood_str}")
         if tags_str:
             lines.append(f"\n**标签**：{tags_str}")
@@ -39,7 +47,7 @@ def _to_json(entries) -> str:
         {
             "date": str(e.date),
             "mood_score": e.mood_score,
-            "mood_label": config.mood_labels[e.mood_score - 1],
+            "mood_label": _mood_label_safe(e.mood_score),
             "note": e.note,
             "tags": e.tags,
             "created_at": e.created_at.isoformat(),
@@ -58,7 +66,7 @@ def _to_csv(entries) -> str:
         writer.writerow([
             str(e.date),
             e.mood_score,
-            config.mood_labels[e.mood_score - 1],
+            _mood_label_safe(e.mood_score),
             e.note,
             "|".join(e.tags),
             e.created_at.isoformat(),

@@ -54,13 +54,23 @@ def report_cmd(month, year, output_path):
     m = month or today.month
 
     if not (1 <= m <= 12):
-        print_error(t("errors.month_range"))
+        print_error("月份得在 1-12 之间哦 📅  例如 -m 5 表示5月")
+        return
+
+    if not (1900 <= y <= 2200):
+        print_error("年份不太对哦 😅  试试正常的年份？")
         return
 
     try:
-        console.print(f"[dim]{t('report.generating')}...[/dim]")
+        console.print(f"[dim]🎨 {t('report.generating')}...[/dim]")
         out = generate_monthly_report(year=y, month=m, output_path=output_path)
         print_success(t("report.success", path=out))
+        console.print(f"[dim]  → 打开文件夹查看：{out}[/dim]")
+    except ImportError as e:
+        if "matplotlib" in str(e).lower():
+            print_error("需要先安装 matplotlib 哦 📦  运行：pip install matplotlib")
+        else:
+            print_error(f"缺少依赖：{e}")
     except Exception as e:
         print_error(t("report.error", msg=str(e)))
         console.print_exception()

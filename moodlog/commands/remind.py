@@ -145,11 +145,14 @@ def remind_on(remind_time):
     from ..utils import art
     t_str = remind_time or config.reminder_time
     try:
-        parts = t_str.split(":")
-        assert 0 <= int(parts[0]) <= 23
-        assert 0 <= int(parts[1]) <= 59
-    except Exception:
-        print_error(t("remind.invalid_time", time=t_str))
+        parts = t_str.strip().split(":")
+        if len(parts) != 2:
+            raise ValueError
+        h, m = int(parts[0]), int(parts[1])
+        if not (0 <= h <= 23 and 0 <= m <= 59):
+            raise ValueError
+    except (ValueError, IndexError):
+        print_error(f"时间格式不对哦 😅  应该是 HH:MM，例如 21:00 或 09:30")
         return
 
     if _IS_WINDOWS:

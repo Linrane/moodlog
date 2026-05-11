@@ -32,9 +32,10 @@ SCORE_COLORS = {
     3: "yellow",
     4: "green",
     5: "bright_green",
+    100: "bright_magenta",   # 彩蛋专属色
 }
 
-SCORE_BAR_CHAR = ""
+SCORE_BAR_CHAR = "█"
 
 # 情绪小结语（中文 fallback）
 _MOOD_QUOTES: dict[int, list[str]] = {
@@ -82,8 +83,13 @@ def mood_quote(score: int) -> str:
 
 
 def mood_bar(score: int, width: int = 20) -> Text:
-    """返回带颜色的情绪进度条。"""
+    """返回带颜色的情绪进度条。100分彩蛋显示满格彩色条。"""
     color = SCORE_COLORS.get(score, "white")
+    if score == 100:
+        # 彩蛋满格条，彩色
+        bar = Text()
+        bar.append(SCORE_BAR_CHAR * width, style=color)
+        return bar
     filled = round(score / 5 * width)
     bar = Text()
     bar.append(SCORE_BAR_CHAR * filled, style=color)
@@ -125,10 +131,10 @@ def entry_table(entries: list[MoodEntry], title: str = "心情日记") -> Table:
     for e in entries:
         tags_text = Text()
         if e.tags:
-            for i, t in enumerate(e.tags):
+            for i, tg in enumerate(e.tags):
                 if i > 0:
                     tags_text.append("  ")
-                tags_text.append(f"#{t}", style="magenta")
+                tags_text.append(f"#{tg}", style="magenta")
         else:
             tags_text.append("—", style="dim")
         note_preview = Text()
@@ -231,7 +237,6 @@ def month_calendar(year: int, month: int, entries: list[MoodEntry]) -> None:
     )
     weekdays = ["一", "二", "三", "四", "五", "六", "日"]
     # 尝试从 i18n 读取星期名（英文环境下会是 Mon~Sun）
-    weekday_key = "calendar.weekdays"
     translations = __import__("moodlog.utils.i18n", fromlist=["_get_translations"])._get_translations
     try:
         wd = translations().get("calendar", {}).get("weekdays", weekdays)
@@ -252,7 +257,11 @@ def month_calendar(year: int, month: int, entries: list[MoodEntry]) -> None:
                 entry = entry_map.get(day_date)
                 if entry:
                     color = SCORE_COLORS.get(entry.mood_score, "white")
-                    emoji = config.mood_emoji[entry.mood_score - 1]
+                    if entry.mood_score == 100:
+                        emoji = "🚀"
+                    else:
+                        idx = max(0, min(4, entry.mood_score - 1))
+                        emoji = config.mood_emoji[idx]
                     cell_text = Text(justify="center")
                     cell_text.append(f"{d:2d}", style=f"bold {color}")
                     cell_text.append(emoji)

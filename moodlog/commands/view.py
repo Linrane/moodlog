@@ -5,7 +5,6 @@ v2：接入 i18n。
 """
 from __future__ import annotations
 
-import sys
 from datetime import date, timedelta
 
 import click
@@ -35,7 +34,9 @@ def today_cmd():
     init_db()
     entry = get_mood_by_date(date.today())
     if entry is None:
-        print_warning(t("view.today_none"))
+        from ..utils.display import today_empty_card
+        console.print()
+        console.print(today_empty_card())
         return
     console.print()
     console.print(entry_detail(entry))
@@ -78,10 +79,10 @@ def view_cmd(target_date, date_from, date_to, last, search):
     if search:
         entries = search_moods(search)
         if not entries:
-            print_warning(t("view.no_records", keyword=search))
+            print_warning(t("view.no_results", default=f"没有找到包含「{search}」的记录 🔍"))
             return
         console.print()
-        console.print(entry_table(entries, title=t("view.search_title", keyword=search)))
+        console.print(entry_table(entries, title=t("view.search_title", keyword=search, default=f"搜索结果：{search}")))
         return
 
     # 单日查看
@@ -89,11 +90,11 @@ def view_cmd(target_date, date_from, date_to, last, search):
         try:
             d = date.fromisoformat(target_date)
         except ValueError:
-            print_error(t("record.messages.date_format_error", date=target_date))
-            sys.exit(1)
+            print_error(f"日期格式不对哦 😅  应该是 YYYY-MM-DD，例如 2026-05-11")
+            return
         entry = get_mood_by_date(d)
         if entry is None:
-            print_warning(t("view.no_record_on", date=d))
+            print_warning(f"{d} 还没有记录 📭  用 [bold]moodlog record[/bold] 补记一下？")
         else:
             console.print()
             console.print(entry_detail(entry))
@@ -101,15 +102,24 @@ def view_cmd(target_date, date_from, date_to, last, search):
 
     # 最近 N 天
     if last is not None:
+        if last <= 0:
+            print_error("天数得是正整数哦，比如 --last 7 或 --last 30 🙃")
+            return
+        if last > 3650:
+            print_error("天数太长了，最多支持 10 年（约 3650 天）的查询 😅  试试小一点的数字？")
+            return
         end = date.today()
         start = end - timedelta(days=last - 1)
     elif date_from or date_to:
         try:
             start = date.fromisoformat(date_from) if date_from else date(2000, 1, 1)
             end = date.fromisoformat(date_to) if date_to else date.today()
-        except ValueError as e:
-            print_error(t("record.messages.date_format_error", date=str(e)))
-            sys.exit(1)
+        except ValueError:
+            print_error("日期格式不对哦 😅  应该是 YYYY-MM-DD，例如 2026-05-01")
+            return
+        if start > end:
+            print_error("开始日期不能晚于结束日期哦 🙃")
+            return
     else:
         # 默认查看最近 7 天
         end = date.today()
@@ -117,7 +127,7 @@ def view_cmd(target_date, date_from, date_to, last, search):
 
     entries = get_moods_by_range(start, end)
     if not entries:
-        print_warning(t("view.no_records_in_range", start=start, end=end))
+        print_warning(f"{start} 到 {end} 之间没有记录 📭  用 [bold]moodlog record[/bold] 记录一下吧~")
         return
     console.print()
-    console.print(entry_table(entries, title=t("view.records_from", date=start)))
+    console.print(entry_table(entries, title=t("view.records_from", date=start, default=f"{start} 以来的记录")))

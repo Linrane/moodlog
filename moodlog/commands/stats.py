@@ -18,7 +18,7 @@ from rich.text import Text
 from ..database import get_moods_by_range, get_stats, get_all_moods, init_db
 from ..config import config
 from ..utils.display import (
-    console, print_warning, score_text, month_calendar,
+    console, print_warning, print_error, score_text, month_calendar,
     streak_badge, mood_bar,
 )
 from ..utils.i18n import t
@@ -52,6 +52,9 @@ def trend_cmd(days, month, year):
 
     today = date.today()
     if month is not None:
+        if not (1 <= month <= 12):
+            print_error("月份得在 1-12 之间哦 📅  例如 --month 5 表示5月")
+            return
         y = year or today.year
         start = date(y, month, 1)
         if month == 12:
@@ -61,6 +64,12 @@ def trend_cmd(days, month, year):
         label = f"{y}年{month}月"
     else:
         n = days or config.default_trend_days
+        if n <= 0:
+            print_error("天数得是正整数哦，比如 trend 7 或 trend 30 🙃")
+            return
+        if n > 3650:
+            print_error("天数太长了，最多支持 10 年（约 3650 天）的查询 😅  试试小一点的数字？")
+            return
         end = today
         start = end - timedelta(days=n - 1)
         label = t("trend.title", days=n)
@@ -120,21 +129,23 @@ def stats_cmd(month, year, calendar):
     overview.add_column("指标", style="bold dim")
     overview.add_column("数值", justify="left")
 
-    avg_score_int = round(result.avg_score)
+    avg_score_int = round(min(result.avg_score, 5))  # 防止100分拉高均值导致越界
     overview.add_row(t("stats.total_records"), f"[bold cyan]{result.total_records}[/bold cyan] 天")
     overview.add_row(
         t("stats.avg_mood"),
         f"{result.avg_score:.2f} / 5.00  {score_text(avg_score_int)}",
     )
     if result.max_date:
+        max_display = config.mood_display(result.max_score)
         overview.add_row(
             t("stats.best_day"),
-            f"{result.max_date}  {score_text(result.max_score)}",
+            f"{result.max_date}  {max_display}",
         )
     if result.min_date:
+        min_display = config.mood_display(result.min_score)
         overview.add_row(
             t("stats.worst_day"),
-            f"{result.min_date}  {score_text(result.min_score)}",
+            f"{result.min_date}  {min_display}",
         )
 
     console.print()
@@ -191,13 +202,15 @@ def stats_cmd(month, year, calendar):
     if calendar:
         y = year or today.year
         m = month or today.month
-        if month is not None:
-            start = date(y, m, 1)
-            end = date(y, m + 1, 1) - timedelta(days=1) if m < 12 else date(y, 12, 31)
+        start = date(y, m, 1)
+        if m == 12:
+            end_cal = date(y, 12, 31)
         else:
-            start = date(y, m, 1)
-            end = today
-        entries = get_moods_by_range(start, end)
+            end_cal = date(y, m + 1, 1) - timedelta(days=1)
+        # 当前月份只显示到今天
+        if y == today.year and m == today.month:
+            end_cal = today
+        entries = get_moods_by_range(start, end_cal)
         console.print()
         month_calendar(y, m, entries)
 

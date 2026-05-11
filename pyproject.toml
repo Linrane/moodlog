@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "moodlog"
-version = "1.4.1"
+version = "1.5.0"
 description = "A minimalist terminal mood diary — record, review, and understand your emotions."
 readme = "README.md"
 license = { text = "MIT" }
@@ -22,7 +22,7 @@ dependencies = [
     "click>=8.1",
     "rich>=13.0",
     "plotext>=5.2",
-    "python-dateutil>=2.8",
+    "matplotlib>=3.7",
     "tomllib; python_version < '3.11'",  # 3.11+ 标准库内置
     "plyer>=2.1",
 ]

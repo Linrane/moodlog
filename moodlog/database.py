@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS moods (
 _CREATE_TAGS = """
 CREATE TABLE IF NOT EXISTS tags (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    mood_id  INTEGER NOT NULL,
+    mood_id  INTEGER NOT NULL REFERENCES moods(id) ON DELETE CASCADE,
     name     TEXT    NOT NULL,
     UNIQUE(mood_id, name)
 );
@@ -71,7 +71,7 @@ def get_connection(db_path: Path | None = None) -> Generator[sqlite3.Connection,
     conn = sqlite3.connect(str(path), detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
-    conn.execute("PRAGMA journal_mode = WAL;")  # 提升并发写性能
+    conn.execute("PRAGMA journal_mode = WAL;")
     try:
         yield conn
         conn.commit()
@@ -84,119 +84,89 @@ def get_connection(db_path: Path | None = None) -> Generator[sqlite3.Connection,
 
 # ── 初始化 ────────────────────────────────────────────────────────
 
+def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    """检查指定表是否存在。"""
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (name,)
+    ).fetchone()
+    return row is not None
 
 
-def _migrate_moods_table(conn: sqlite3.Connection) -> None:
-    """迁移 moods 表：移除旧 CHECK 约束（如果存在）。"""
-    # 检测是否需要迁移：尝试插入 100 分
+def _moods_supports_100(conn: sqlite3.Connection) -> bool:
+    """检查 moods 表是否已支持 100 分彩蛋（即 CHECK 约束是否正确）。"""
     try:
         conn.execute("INSERT INTO moods (date, mood_score) VALUES ('2099-01-01', 100)")
         conn.execute("DELETE FROM moods WHERE date = '2099-01-01'")
-        return  # 无需迁移
+        return True
     except sqlite3.IntegrityError:
-        pass  # 需要迁移
+        return False
 
-    # 执行迁移（禁用外键约束，避免 tags 表引用问题）
-    conn.execute("PRAGMA foreign_keys = OFF;")
-    try:
-        # 清理可能残留的旧表
-        conn.execute("DROP TABLE IF EXISTS moods_old")
-        conn.execute("DROP TABLE IF EXISTS tags_old")
-        
-        # 备份旧表
-        conn.execute("ALTER TABLE moods RENAME TO moods_old")
-        conn.execute("ALTER TABLE tags RENAME TO tags_old")
-        
-        # 创建新表（使用新的 CHECK 约束）
-        conn.execute(_CREATE_MOODS)
-        conn.execute(_CREATE_TAGS)
-        conn.execute(_CREATE_IDX_DATE)
-        conn.execute(_CREATE_IDX_TAG)
-        
-        # 恢复数据
-        conn.execute("""
-            INSERT INTO moods (id, date, mood_score, note, created_at, updated_at)
-            SELECT id, date, mood_score, note, created_at, updated_at FROM moods_old
-        """)
-        conn.execute("""
-            INSERT INTO tags (id, mood_id, name)
-            SELECT id, mood_id, name FROM tags_old
-        """)
-        
-        # 删除备份表
-        conn.execute("DROP TABLE moods_old")
-        conn.execute("DROP TABLE tags_old")
-    finally:
-        conn.execute("PRAGMA foreign_keys = ON;")
 
 def init_db(db_path: Path | None = None) -> None:
     """创建数据表（幂等操作），并执行必要的迁移。"""
     with get_connection(db_path) as conn:
-        # 强制重建 tags 表（确保没有外键约束）
-        _rebuild_tags_table(conn)
-        
-        # 检测是否需要迁移 moods 表
-        needs_migration = False
-        try:
-            conn.execute("INSERT INTO moods (date, mood_score) VALUES ('2099-01-01', 100)")
-            conn.execute("DELETE FROM moods WHERE date = '2099-01-01'")
-        except (sqlite3.IntegrityError, sqlite3.OperationalError):
-            needs_migration = True
-        
-        if needs_migration:
-            # 执行迁移：备份数据，重建表，恢复数据
-            conn.execute("PRAGMA foreign_keys = OFF;")
-            try:
-                # 备份 moods 数据
-                conn.execute("ALTER TABLE moods RENAME TO moods_old")
-                
-                # 创建新表
-                conn.execute(_CREATE_MOODS)
-                conn.execute(_CREATE_IDX_DATE)
-                
-                # 恢复数据
-                conn.execute("""
-                    INSERT INTO moods (id, date, mood_score, note, created_at, updated_at)
-                    SELECT id, date, mood_score, note, created_at, updated_at FROM moods_old
-                """)
-                conn.execute("DROP TABLE moods_old")
-            finally:
-                conn.execute("PRAGMA foreign_keys = ON;")
-        else:
-            # 无需迁移，直接创建表（IF NOT EXISTS）
+        moods_exists = _table_exists(conn, "moods")
+        tags_exists = _table_exists(conn, "tags")
+
+        if not moods_exists:
+            # 全新数据库：直接建所有表
             conn.execute(_CREATE_MOODS)
+            conn.execute(_CREATE_TAGS)
             conn.execute(_CREATE_IDX_DATE)
-            
-        # 确保 tags 表索引存在
+            conn.execute(_CREATE_IDX_TAG)
+            return
+
+        # moods 表已存在：检查是否需要迁移（旧 CHECK 约束不支持 100 分）
+        if not _moods_supports_100(conn):
+            _migrate_v1_to_v2(conn)
+        else:
+            # 无需迁移，确保索引存在
+            conn.execute(_CREATE_IDX_DATE)
+
+        # 确保 tags 表和索引存在
+        if not tags_exists:
+            conn.execute(_CREATE_TAGS)
         conn.execute(_CREATE_IDX_TAG)
 
 
-def _rebuild_tags_table(conn: sqlite3.Connection) -> None:
-    """重建 tags 表，确保没有外键约束。"""
-    # 检查 tags 表是否存在
-    cursor = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='tags'"
-    )
-    if cursor.fetchone():
-        # 备份数据
-        conn.execute("ALTER TABLE tags RENAME TO tags_backup")
-        
-        # 创建新表（无外键约束）
+def _migrate_v1_to_v2(conn: sqlite3.Connection) -> None:
+    """v1 → v2 迁移：重建 moods 表，支持 100 分彩蛋。"""
+    conn.execute("PRAGMA foreign_keys = OFF;")
+    try:
+        # 清理可能残留的临时表
+        conn.execute("DROP TABLE IF EXISTS moods_v1_backup")
+        conn.execute("DROP TABLE IF EXISTS tags_v1_backup")
+
+        # 备份旧 moods 数据
+        conn.execute("ALTER TABLE moods RENAME TO moods_v1_backup")
+
+        # 如果 tags 表存在且有外键约束，也一起重建
+        if _table_exists(conn, "tags"):
+            conn.execute("ALTER TABLE tags RENAME TO tags_v1_backup")
+
+        # 建新表
+        conn.execute(_CREATE_MOODS)
         conn.execute(_CREATE_TAGS)
+        conn.execute(_CREATE_IDX_DATE)
         conn.execute(_CREATE_IDX_TAG)
-        
-        # 恢复数据
+
+        # 恢复 moods 数据
         conn.execute("""
-            INSERT INTO tags (id, mood_id, name)
-            SELECT id, mood_id, name FROM tags_backup
+            INSERT INTO moods (id, date, mood_score, note, created_at, updated_at)
+            SELECT id, date, mood_score, note, created_at, updated_at
+            FROM moods_v1_backup
         """)
-        
-        # 删除备份表
-        conn.execute("DROP TABLE tags_backup")
-    else:
-        # 表不存在，直接创建
-        conn.execute(_CREATE_TAGS)
-        conn.execute(_CREATE_IDX_TAG)
+        conn.execute("DROP TABLE moods_v1_backup")
+
+        # 恢复 tags 数据（如有备份）
+        if _table_exists(conn, "tags_v1_backup"):
+            conn.execute("""
+                INSERT INTO tags (id, mood_id, name)
+                SELECT id, mood_id, name FROM tags_v1_backup
+            """)
+            conn.execute("DROP TABLE tags_v1_backup")
+    finally:
+        conn.execute("PRAGMA foreign_keys = ON;")
 
 
 # ── 写操作 ────────────────────────────────────────────────────────
@@ -236,7 +206,7 @@ def insert_or_update_mood(
             conn.execute("DELETE FROM tags WHERE mood_id=?", (mood_id,))
 
         # 写入标签（去重）
-        clean_tags = list(dict.fromkeys(t.strip() for t in tags if t.strip()))
+        clean_tags = list(dict.fromkeys(tag.strip() for tag in tags if tag.strip()))
         for tag in clean_tags:
             conn.execute(
                 "INSERT OR IGNORE INTO tags (mood_id, name) VALUES (?,?)",
@@ -256,10 +226,17 @@ def insert_or_update_mood(
 
 
 def delete_mood(record_date: date, db_path: Path | None = None) -> bool:
-    """删除指定日期的记录。返回是否真的删了。"""
+    """删除指定日期的记录及其关联标签。返回是否真的删了。"""
     with get_connection(db_path) as conn:
-        cur = conn.execute("DELETE FROM moods WHERE date = ?", (record_date,))
-        return cur.rowcount > 0
+        # 先获取 mood_id，用于手动级联删除 tags
+        # （兼容旧数据库中 tags 无外键约束的情况）
+        row = conn.execute("SELECT id FROM moods WHERE date = ?", (record_date,)).fetchone()
+        if row is None:
+            return False
+        mood_id = row["id"]
+        conn.execute("DELETE FROM tags WHERE mood_id = ?", (mood_id,))
+        conn.execute("DELETE FROM moods WHERE id = ?", (mood_id,))
+        return True
 
 
 # ── 读操作 ────────────────────────────────────────────────────────
@@ -362,15 +339,16 @@ def get_all_moods(db_path: Path | None = None) -> list[MoodEntry]:
 
 
 def get_stats(db_path: Path | None = None) -> StatsResult:
-    """计算汇总统计数据。"""
+    """计算汇总统计数据。100分彩蛋不计入均值统计。"""
     with get_connection(db_path) as conn:
+        # 均值统计排除100分彩蛋，避免数据失真
         row = conn.execute(
             """
             SELECT
-                COUNT(*)           AS total,
-                AVG(mood_score)    AS avg_score,
-                MAX(mood_score)    AS max_score,
-                MIN(mood_score)    AS min_score
+                COUNT(*)                                   AS total,
+                AVG(CASE WHEN mood_score != 100 THEN mood_score END) AS avg_score,
+                MAX(mood_score)                            AS max_score,
+                MIN(mood_score)                            AS min_score
             FROM moods
             """
         ).fetchone()
@@ -396,13 +374,14 @@ def get_stats(db_path: Path | None = None) -> StatsResult:
 
         monthly_rows = conn.execute(
             """
-            SELECT strftime('%Y-%m', date) AS ym, AVG(mood_score) AS avg
+            SELECT strftime('%Y-%m', date) AS ym,
+                   AVG(CASE WHEN mood_score != 100 THEN mood_score END) AS avg
             FROM moods
             GROUP BY ym
             ORDER BY ym ASC
             """
         ).fetchall()
-        monthly_avg = {r["ym"]: round(float(r["avg"]), 2) for r in monthly_rows}
+        monthly_avg = {r["ym"]: round(float(r["avg"]), 2) for r in monthly_rows if r["avg"] is not None}
 
     return StatsResult(
         total_records=total,

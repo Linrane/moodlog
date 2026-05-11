@@ -118,6 +118,14 @@ moodlog report -m 5 -y 2026  # 指定月份
 
 提醒功能在 Windows 上通过计划任务实现，在 Linux/macOS 上通过 crontab 实现。
 
+### 管理
+
+| 命令 | 说明 |
+|------|------|
+| `moodlog delete 2026-05-08` | 删除指定日期的记录 |
+| `mlog delete` | 删除今天的记录 |
+| `moodlog delete --force` | 不询问直接删除今天 |
+
 ---
 
 ## 多语言
@@ -169,10 +177,11 @@ export MOODLOG_DB_PATH=/自定义路径/my_moodlog.db
 |------|------|------|
 | `id` | 整数 | 唯一 ID，自增 |
 | `date` | 日期 | 记录日期（每日最多一条，可覆盖） |
-| `score` | 整数 | 心情评分，1–5 |
-| `diary` | 文本 | 日记正文，可为空 |
-| `tags` | 文本 | 标签，逗号分隔 |
+| `mood_score` | 整数 | 心情评分，1–5（或 100 分彩蛋） |
+| `note` | 文本 | 日记正文，可为空 |
+| `tags` | 文本列表 | 标签，可多个 |
 | `created_at` | 时间戳 | 记录创建时间 |
+| `updated_at` | 时间戳 | 最近修改时间 |
 
 数据库文件位于 `data/moodlog.db`，是标准 SQLite 格式，可用任意 SQLite 客户端直接打开。
 
@@ -189,26 +198,27 @@ moodlog/
 ├── __main__.py               # python -m moodlog 入口
 ├── commands/
 │   ├── record.py             # 记录心情
-│   ├── view.py              # 查看记录
-│   ├── stats.py             # 统计与趋势
-│   ├── export.py            # 多格式导出
-│   ├── remind.py            # 每日提醒
-│   └── report.py            # matplotlib 月度图片
+│   ├── view.py               # 查看记录
+│   ├── stats.py              # 统计与趋势
+│   ├── export.py             # 多格式导出
+│   ├── remind.py             # 每日提醒
+│   ├── report.py             # matplotlib 月度图片
+│   └── delete.py             # 删除记录
 ├── utils/
-│   ├── display.py            # Rich 终端美化输出
-│   ├── chart.py             # plotext 折线图
-│   ├── art.py               # ASCII 出场动画、可视化评分
-│   ├── i18n.py              # 多语言引擎（线程局部存储 + 中文 fallback）
-│   ├── report.py            # matplotlib 月度报告
-│   └── notify.py            # 跨平台桌面通知
+│   ├── display.py             # Rich 终端美化输出
+│   ├── chart.py              # plotext 折线图
+│   ├── art.py                # ASCII 出场动画、可视化评分
+│   ├── i18n.py               # 多语言引擎（线程局部存储 + 中文 fallback）
+│   ├── report.py             # matplotlib 月度报告
+│   └── notify.py              # 跨平台桌面通知
 ├── locale/
 │   ├── zh_CN.json            # 中文翻译（基准）
 │   └── en_US.json            # 英文翻译
 └── tests/
-    ├── test_database.py      # 数据库层 17 个测试
-    ├── test_record.py        # record 命令 6 个集成测试
-    └── test_stats.py         # stats 命令 6 个集成测试
-.github/workflows/ci.yml      # GitHub Actions（Python 3.10–3.13 矩阵）
+    ├── test_database.py       # 数据库层 14 个测试
+    ├── test_record.py         # record 命令 6 个集成测试
+    └── test_stats.py          # stats 命令 6 个集成测试
+.github/workflows/ci.yml       # GitHub Actions（Python 3.10–3.13 矩阵）
 data/moodlog.db               # 数据库文件（不纳入版本控制）
 ```
 
@@ -235,7 +245,6 @@ pytest --cov=moodlog --cov-report=html  # HTML 报告
 | 终端折线图 | plotext 5 | 直接在终端绘图，无依赖额外图形库 |
 | 月度报告图 | matplotlib | 非交互 Agg 后端，无需显示器 |
 | 数据存储 | SQLite（标准库） | 单文件，无须额外部署 |
-| 日期处理 | python-dateutil | 处理月份、周期边界 |
 | 桌面通知 | plyer | Windows / macOS / Linux 通用 |
 | 配置格式 | tomllib | Python 3.11+ 标准库，TOML 1.0 |
 | 测试框架 | pytest + pytest-cov | 单元测试 + 集成测试 + 覆盖率 |
@@ -275,24 +284,20 @@ pytest --cov=moodlog --cov-report=html  # HTML 报告
 
 ## 彩蛋 🥚
 
-MoodLog 隐藏了一个彩蛋：**输入 100 分**即可触发。
+MoodLog 隐藏了一个彩蛋：给自己打个 **100 分** 试试？
 
 ```bash
 moodlog record 100
 ```
 
-**效果：**
-- 数据库中会记录一条 100 分的心情
-- 显示文本为：`100⭐ 🚀 宇宙无敌爆炸开心`
-- 可以附上日记和标签，无特殊限制
+**会发生什么：**
+- 进度条变成满格，文字变成 `100⭐ 🚀 宇宙无敌爆炸开心`
+- 日历里那天会显示 🚀 emoji
+- 所有统计数据自动排除 100 分（避免图表失真），均值、最高/最低日判断不受影响
+- 导出时正常导出为 `mood_score = 100`
 
-**寓意：**  
-100 分代表一种超越寻常评分的极致开心。如果你今天真的"爱这个世界"，就给它 100 分吧。
-
-**注意：**
-- 100 分仅影响 `mood_score` 字段，不影响统计（均值、最高分等仍按 1–5 分计算）
-- 趋势图、月度报告不会显示 100 分（避免图表失真）
-- 导出数据时，100 分记录会正常导出
+**为什么有这个彩蛋：**
+有些日子特别特别好，值得一个专属的标记。如果今天你真的感觉"爱这个世界"，就给自己 100 分吧。
 
 ---
 
