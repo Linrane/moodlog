@@ -1,53 +1,55 @@
 # MoodLog
 
-> 终端心情日记。记录情绪，看见变化。
+> A mood diary for your terminal. Track emotions, spot patterns.
+
+[中文文档](README_zh.md)
 
 ---
 
-## 什么是 MoodLog
+## What is MoodLog
 
-MoodLog 是一个运行在命令行里的心情记录工具。
+MoodLog is a command-line mood tracking tool.
 
-每天用 1–5 分给当天打个分，可以附上一段日记或几个标签。积累一段时间后，用内置的统计、趋势图、月度报告来回顾：哪几天心情最好、哪些标签反复出现、最近的情绪走向是怎样的。
+Each day, give yourself a score from 1–5, optionally with a short diary entry or a few tags. Over time, use the built-in stats, trend charts, and monthly reports to look back: which days were best, which tags keep showing up, how your mood has been trending.
 
-所有数据存在本地 SQLite 数据库里，不联网，不上传。数据库文件就在 `data/moodlog.db`，随时可以备份或迁移。
+All data stays in a local SQLite database — nothing goes online, nothing gets uploaded. The database file lives at `data/moodlog.db`, and you can back it up or migrate it anytime.
 
 ---
 
-## 安装
+## Installation
 
 ```bash
-# 克隆仓库
+# Clone the repo
 git clone https://github.com/Linrane/moodlog.git
 cd moodlog
 
-# 创建虚拟环境（推荐）
+# Create a virtual environment (recommended)
 python -m venv .venv
-source .venv/bin/activate     # Windows 用 .venv\Scripts\activate
+source .venv/bin/activate     # Windows: .venv\Scripts\activate
 
-# 安装
+# Install
 pip install -e ".[dev]"
 ```
 
-安装完成后，在终端任意目录直接输入 `moodlog` 即可运行。首次启动会自动在 `moodlog/` 目录下生成配置文件 `config.toml`。
+Once installed, just type `moodlog` in your terminal from anywhere. On first run, a config file `config.toml` will be created automatically in the `moodlog/` directory.
 
 ---
 
-## 快速上手
+## Quick Start
 
-记录今天的心情（直接给分，10 秒完成）：
+Log today's mood (just a number, done in 10 seconds):
 
 ```bash
 moodlog record 4
 ```
 
-带日记和标签：
+With a diary entry and tags:
 
 ```bash
-moodlog record 4 -n "今天项目上线，一切顺利" -t 工作
+moodlog record 4 -n "Project launched today, everything went smoothly" -t work
 ```
 
-不指定分数，进入交互式引导：
+No score? An interactive prompt will guide you:
 
 ```bash
 moodlog record
@@ -55,249 +57,238 @@ moodlog record
 
 ---
 
-## 命令一览
+## Command Overview
 
-### 记录
+### Recording
 
-| 命令 | 说明 |
-|------|------|
-| `moodlog record [分数]` | 记录今日心情。分数 1–5，不填则进入交互模式 |
-| `moodlog record 4 -n "日记内容"` | 附带一段日记 |
-| `moodlog record 4 -t 工作 -t 运动` | 添加多个标签 |
-| `moodlog record 3 -d 2026-05-08` | 指定日期补记 |
-| `moodlog record 5 --force` | 覆盖当天已有记录 |
+| Command | Description |
+|---------|-------------|
+| `moodlog record [score]` | Log today's mood. Score 1–5, or omit to enter interactive mode |
+| `moodlog record 4 -n "diary text"` | Add a diary entry |
+| `moodlog record 4 -t work -t exercise` | Add multiple tags |
+| `moodlog record 3 -d 2026-05-08` | Backfill a past date |
+| `moodlog record 5 --force` | Overwrite today's entry |
 
-### 查看
+### Viewing
 
-| 命令 | 说明 |
-|------|------|
-| `moodlog today` | 查看今天有没有记录 |
-| `moodlog view 2026-05-09` | 查看指定日期 |
-| `moodlog view --last 14` | 最近 14 天的列表 |
-| `moodlog view --from 2026-05-01 --to 2026-05-31` | 范围内的记录 |
-| `moodlog view -s "关键词"` | 在日记和标签里全文搜索 |
+| Command | Description |
+|---------|-------------|
+| `moodlog today` | Check if you've logged today |
+| `moodlog view 2026-05-09` | View a specific date |
+| `moodlog view --last 14` | List last 14 days |
+| `moodlog view --from 2026-05-01 --to 2026-05-31` | View a date range |
+| `moodlog view -s "keyword"` | Search diary and tags |
 
-### 趋势与统计
+### Trends & Stats
 
-| 命令 | 说明 |
-|------|------|
-| `moodlog trend` | 近 7 天情绪折线图（默认） |
-| `moodlog trend 30` | 近 30 天趋势 |
-| `moodlog trend --month 5` | 指定月份的折线图 |
-| `moodlog stats` | 统计面板：均分、最高/最低日、标签分布、月均情绪 |
-| `moodlog stats --calendar` | 统计面板 + 月历热力图 |
-| `moodlog stats --month 5` | 指定月份的统计 |
+| Command | Description |
+|---------|-------------|
+| `moodlog trend` | 7-day mood line chart (default) |
+| `moodlog trend 30` | 30-day trend |
+| `moodlog trend --month 5` | Specified month's trend |
+| `moodlog stats` | Stats panel: average, best/worst days, tag distribution, monthly averages |
+| `moodlog stats --calendar` | Stats panel + monthly calendar heatmap |
+| `moodlog stats --month 5` | Stats for a specific month |
 
-### 月度报告图片
+### Monthly Report Image
 
 ```bash
-moodlog report                # 生成本月报告图片
-moodlog report -m 5 -y 2026  # 指定月份
+moodlog report                # Generate this month's report image
+moodlog report -m 5 -y 2026  # Specify month and year
 ```
 
-图片自动保存到 `~/moodlog_reports/moodlog_YYYY_MM.png`，包含日历热力图和情绪折线图两部分。
+Images are saved to `~/moodlog_reports/moodlog_YYYY_MM.png`, containing a calendar heatmap and a mood trend line chart.
 
-### 导出
+### Export
 
-| 命令 | 说明 |
-|------|------|
-| `moodlog export` | 导出全部记录为 Markdown，直接打印到终端 |
-| `moodlog export --format markdown -o diary.md` | 导出为 Markdown 文件 |
-| `moodlog export --format json -o data.json` | 导出为 JSON |
-| `moodlog export --format csv -o data.csv` | 导出为 CSV |
-| `moodlog export --from 2026-05-01 --to 2026-05-31 -o may.csv` | 按日期范围导出 |
+| Command | Description |
+|---------|-------------|
+| `moodlog export` | Export all entries as Markdown (printed to terminal) |
+| `moodlog export --format markdown -o diary.md` | Export as Markdown file |
+| `moodlog export --format json -o data.json` | Export as JSON |
+| `moodlog export --format csv -o data.csv` | Export as CSV |
+| `moodlog export --from 2026-05-01 --to 2026-05-31 -o may.csv` | Export by date range |
 
-### 提醒
+### Reminder
 
-| 命令 | 说明 |
-|------|------|
-| `moodlog remind on` | 开启每日提醒 |
-| `moodlog remind on --time 21:00` | 指定提醒时间 |
-| `moodlog remind off` | 关闭提醒 |
-| `moodlog remind status` | 查看当前提醒状态 |
+| Command | Description |
+|---------|-------------|
+| `moodlog remind on` | Enable daily reminder |
+| `moodlog remind on --time 21:00` | Set reminder time |
+| `moodlog remind off` | Disable reminder |
+| `moodlog remind status` | Check reminder status |
 
-提醒功能在 Windows 上通过计划任务实现，在 Linux/macOS 上通过 crontab 实现。
+Reminders use scheduled tasks on Windows and crontab on Linux/macOS.
 
-### 管理
+### Management
 
-| 命令 | 说明 |
-|------|------|
-| `moodlog delete 2026-05-08` | 删除指定日期的记录 |
-| `mlog delete` | 删除今天的记录 |
-| `moodlog delete --force` | 不询问直接删除今天 |
+| Command | Description |
+|---------|-------------|
+| `moodlog delete 2026-05-08` | Delete a specific date's entry |
+| `mlog delete` | Delete today's entry |
+| `moodlog delete --force` | Delete today without confirmation |
 
 ---
 
-## 多语言
+## Multi-language
 
-MoodLog 支持中文和英文。切换方法：打开 `moodlog/config.toml`，在文件**最顶层**加入一行：
+MoodLog supports Chinese and English. To switch, open `moodlog/config.toml` and add this line at the **top** of the file:
 
 ```toml
-language = "en_US"   # 切换为英文
-language = "zh_CN"   # 切换回中文
+language = "en_US"   # Switch to English
+language = "zh_CN"   # Switch back to Chinese
 ```
 
-修改后重新运行命令即可生效。所有界面文字（提示语、标签、情绪描述、错误信息）均跟随语言设置变化。
+The change takes effect immediately on next run. All interface text (prompts, labels, mood descriptions, error messages) will follow the language setting.
 
 ---
 
-## 配置说明
+## Configuration
 
-`moodlog/config.toml` 首次运行后自动生成，包含以下可调项：
+`moodlog/config.toml` is auto-generated on first run. Available settings:
 
 ```toml
-language = "zh_CN"          # 界面语言：zh_CN 或 en_US
+language = "zh_CN"          # Interface language: zh_CN or en_US
 
 [database]
-path = "../../data/moodlog.db"   # 数据库路径，支持绝对路径
+path = "../../data/moodlog.db"   # Database path, supports absolute paths
 
 [ui]
-mood_emoji  = ["😫", "😔", "😐", "😊", "🤩"]   # 各分数对应的 emoji
-mood_labels = ["很差", "较差", "一般", "不错", "很棒"]  # 各分数的标签文字
-default_trend_days = 7        # trend 命令默认展示天数
+mood_emoji  = ["😫", "😔", "😐", "😊", "🤩"]   # Emoji for each score
+mood_labels = ["Very Bad", "Not Great", "Okay", "Good", "Amazing"]  # Labels for each score
+default_trend_days = 7        # Default number of days for trend command
 
 [reminder]
 enabled = false
 time    = "21:00"
 ```
 
-也可以通过环境变量指定数据库路径：
+You can also specify the database path via environment variable:
 
 ```bash
-export MOODLOG_DB_PATH=/自定义路径/my_moodlog.db
+export MOODLOG_DB_PATH=/custom/path/my_moodlog.db
 ```
 
 ---
 
-## 数据结构
+## Data Structure
 
-每次记录包含以下字段：
+Each entry contains the following fields:
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `id` | 整数 | 唯一 ID，自增 |
-| `date` | 日期 | 记录日期（每日最多一条，可覆盖） |
-| `mood_score` | 整数 | 心情评分，1–5（或 100 分彩蛋） |
-| `note` | 文本 | 日记正文，可为空 |
-| `tags` | 文本列表 | 标签，可多个 |
-| `created_at` | 时间戳 | 记录创建时间 |
-| `updated_at` | 时间戳 | 最近修改时间 |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | Integer | Unique ID, auto-increment |
+| `date` | Date | Record date (one per day, can overwrite) |
+| `mood_score` | Integer | Mood score, 1–5 (or 100 for the easter egg) |
+| `note` | Text | Diary text, can be empty |
+| `tags` | Text list | Tags, can be multiple |
+| `created_at` | Timestamp | Record creation time |
+| `updated_at` | Timestamp | Last modification time |
 
-数据库文件位于 `data/moodlog.db`，是标准 SQLite 格式，可用任意 SQLite 客户端直接打开。
+The database file is at `data/moodlog.db`, standard SQLite format, openable with any SQLite client.
 
 ---
 
-## 项目结构
+## Project Structure
 
 ```
 moodlog/
-├── config.py                 # 配置读取，支持 TOML + 环境变量
-├── database.py               # SQLite CRUD，日期适配器注册
-├── models.py                 # MoodEntry / StatsResult 数据类
-├── main.py                   # Click CLI 入口
-├── __main__.py               # python -m moodlog 入口
+├── config.py                 # Config reader, supports TOML + env vars
+├── database.py               # SQLite CRUD, date adapter registration
+├── models.py                 # MoodEntry / StatsResult data classes
+├── main.py                   # Click CLI entry point
+├── __main__.py               # python -m moodlog entry point
 ├── commands/
-│   ├── record.py             # 记录心情
-│   ├── view.py               # 查看记录
-│   ├── stats.py              # 统计与趋势
-│   ├── export.py             # 多格式导出
-│   ├── remind.py             # 每日提醒
-│   ├── report.py             # matplotlib 月度图片
-│   └── delete.py             # 删除记录
+│   ├── record.py             # Record mood
+│   ├── view.py               # View records
+│   ├── stats.py              # Stats and trends
+│   ├── export.py             # Multi-format export
+│   ├── remind.py             # Daily reminders
+│   ├── report.py             # matplotlib monthly images
+│   └── delete.py             # Delete records
 ├── utils/
-│   ├── display.py             # Rich 终端美化输出
-│   ├── chart.py              # plotext 折线图
-│   ├── art.py                # ASCII 出场动画、可视化评分
-│   ├── i18n.py               # 多语言引擎（线程局部存储 + 中文 fallback）
-│   ├── report.py             # matplotlib 月度报告
-│   └── notify.py              # 跨平台桌面通知
+│   ├── display.py             # Rich terminal output
+│   ├── chart.py              # plotext line charts
+│   ├── art.py                # ASCII animations, visual score picker
+│   ├── i18n.py               # i18n engine (thread-local + Chinese fallback)
+│   ├── report.py             # matplotlib monthly report
+│   └── notify.py              # Cross-platform desktop notifications
 ├── locale/
-│   ├── zh_CN.json            # 中文翻译（基准）
-│   └── en_US.json            # 英文翻译
+│   ├── zh_CN.json            # Chinese translations (baseline)
+│   └── en_US.json            # English translations
 └── tests/
-    ├── test_database.py       # 数据库层 14 个测试
-    ├── test_record.py         # record 命令 6 个集成测试
-    └── test_stats.py          # stats 命令 6 个集成测试
-.github/workflows/ci.yml       # GitHub Actions（Python 3.10–3.13 矩阵）
-data/moodlog.db               # 数据库文件（不纳入版本控制）
+    ├── test_database.py       # Database layer, 14 tests
+    ├── test_record.py         # record command, 6 integration tests
+    └── test_stats.py          # stats command, 6 integration tests
+.github/workflows/ci.yml       # GitHub Actions (Python 3.10–3.13 matrix)
+data/moodlog.db               # Database file (not version controlled)
 ```
 
 ---
 
-## 测试
+## Testing
 
 ```bash
-pytest                       # 运行全部测试
-pytest --cov=moodlog          # 带覆盖率
-pytest --cov=moodlog --cov-report=html  # HTML 报告
+pytest                       # Run all tests
+pytest --cov=moodlog          # With coverage
+pytest --cov=moodlog --cov-report=html  # HTML coverage report
 ```
 
-当前测试覆盖：27 个用例，涵盖数据库操作、record 命令、stats 命令。覆盖率 53%，部分工具模块（如 notify、report 交互部分）暂未纳入测试。
+Current test suite: 27 test cases, covering database operations, record command, and stats command. Coverage is 53%; some utility modules (notify, report interaction) are not yet included.
 
 ---
 
-## 技术选型
+## Tech Stack
 
-| 用途 | 工具 | 说明 |
-|------|------|------|
-| 命令行界面 | Click 8 | 声明式子命令，支持嵌套 |
-| 终端美化 | Rich 13 | 表格、颜色、面板、月历 |
-| 终端折线图 | plotext 5 | 直接在终端绘图，无依赖额外图形库 |
-| 月度报告图 | matplotlib | 非交互 Agg 后端，无需显示器 |
-| 数据存储 | SQLite（标准库） | 单文件，无须额外部署 |
-| 桌面通知 | plyer | Windows / macOS / Linux 通用 |
-| 配置格式 | tomllib | Python 3.11+ 标准库，TOML 1.0 |
-| 测试框架 | pytest + pytest-cov | 单元测试 + 集成测试 + 覆盖率 |
-| CI | GitHub Actions | 推送/PR 自动触发，Python 3.10–3.13 全矩阵 |
-
----
-
-## 常见问题
-
-**Q：每天可以记录多条吗？**
-不可以。每日期最多保留一条记录，使用 `--force` 可以覆盖当天已有内容。
-
-**Q：数据存在哪里？**
-默认在 `data/moodlog.db`，是 SQLite 文件。在 `config.toml` 的 `[database]` 部分可以修改路径。
-
-**Q：如何备份数据？**
-直接复制 `data/moodlog.db` 文件即可。这是标准 SQLite 数据库，也可以用 `sqlite3 moodlog.db .dump` 导出为 SQL 文本。
-
-**Q：提醒功能怎么用？**
-运行 `moodlog remind on` 后，程序会自动在系统注册一个定时任务（Windows 用任务计划程序，Linux/macOS 用 crontab）。每日到达设定时间会弹出一个桌面通知。
-
-**Q：matplotlib 报告图存到哪里了？**
-默认保存到用户主目录下的 `moodlog_reports/` 文件夹：`~/moodlog_reports/moodlog_YYYY_MM.png`。
+| Purpose | Tool | Notes |
+|---------|------|-------|
+| CLI | Click 8 | Declarative subcommands, supports nesting |
+| Terminal UI | Rich 13 | Tables, colors, panels, calendar |
+| Terminal charts | plotext 5 | In-terminal plotting, no extra graphics libs |
+| Monthly reports | matplotlib | Non-interactive Agg backend, no display needed |
+| Data storage | SQLite (stdlib) | Single file, no extra deployment |
+| Desktop notifications | plyer | Windows / macOS / Linux compatible |
+| Config format | tomllib | Python 3.11+ stdlib, TOML 1.0 |
+| Testing | pytest + pytest-cov | Unit tests + integration tests + coverage |
+| CI | GitHub Actions | Triggered on push/PR, Python 3.10–3.13 full matrix |
 
 ---
 
-## 开发记录
+## FAQ
 
-| 阶段 | 内容 | 状态 |
-|------|------|------|
-| 第一阶段 | 项目骨架、数据库、record、today | 完成 |
-| 第二阶段 | 标签、搜索、view、stats、export | 完成 |
-| 第三阶段 | Rich 美化、提醒、单元测试、pyproject 打包 | 完成 |
-| 第四阶段 | GitHub Actions CI、多语言（i18n）、matplotlib 月度报告、ASCII 出场动画 | 完成 |
+**Q: Can I record multiple entries per day?**
+No. At most one entry per day. Use `--force` to overwrite an existing entry.
+
+**Q: Where is my data stored?**
+By default at `data/moodlog.db`, a SQLite file. You can change the path in `config.toml` under the `[database]` section.
+
+**Q: How do I back up my data?**
+Just copy the `data/moodlog.db` file. It's a standard SQLite database. You can also use `sqlite3 moodlog.db .dump` to export as SQL text.
+
+**Q: How does the reminder feature work?**
+After running `moodlog remind on`, the program registers a scheduled task (Task Scheduler on Windows, crontab on Linux/macOS). At the set time each day, a desktop notification will pop up.
+
+**Q: Where are the matplotlib report images saved?**
+By default to `~/moodlog_reports/moodlog_YYYY_MM.png`.
 
 ---
 
-## 彩蛋 🥚
+## Easter Egg
 
-MoodLog 隐藏了一个彩蛋：给自己打个 **100 分** 试试？
+MoodLog has a hidden easter egg: try giving yourself a **score of 100**!
 
 ```bash
 moodlog record 100
 ```
 
-**会发生什么：**
-- 进度条变成满格，文字变成 `100⭐ 🚀 宇宙无敌爆炸开心`
-- 日历里那天会显示 🚀 emoji
-- 所有统计数据自动排除 100 分（避免图表失真），均值、最高/最低日判断不受影响
-- 导出时正常导出为 `mood_score = 100`
+**What happens:**
+- The progress bar goes full, text becomes `100⭐ 🚀 Universe-Invincible-Explosion-Happy`
+- That day shows 🚀 in the calendar view
+- All stats automatically exclude the 100 score (to avoid chart distortion), but averages and best/worst day calculations are not affected
+- Exports normally as `mood_score = 100`
 
-**为什么有这个彩蛋：**
-有些日子特别特别好，值得一个专属的标记。如果今天你真的感觉"爱这个世界"，就给自己 100 分吧。
+**Why this easter egg:**
+Some days are just extraordinarily good — they deserve a special marker. If today you really feel like "loving this world," give yourself 100 points.
 
 ---
 
